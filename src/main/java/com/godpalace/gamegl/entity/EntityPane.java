@@ -14,6 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+// 注意: 继承EntityPane类并重写paintComponent方法时, 必须调用super.paintComponent(g)方法
 public class EntityPane extends JPanel implements KeyListener, MouseListener {
     private final ConcurrentSkipListMap<Integer, CopyOnWriteArrayList<Entity>> entities;
     private final ConcurrentHashMap<Integer, Integer> idToLayers;

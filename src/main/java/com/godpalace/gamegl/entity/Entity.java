@@ -179,13 +179,13 @@ public abstract class Entity {
     }
 
     public void moveEntity(int dx, int dy) {
-        this.x += dx;
-        this.y += dy;
+        this.setEntityX(this.getEntityX() + dx);
+        this.setEntityY(this.getEntityY() + dy);
     }
 
     public void moveEntityTo(int x, int y) {
-        this.x = x;
-        this.y = y;
+        this.setEntityX(x);
+        this.setEntityY(y);
     }
 
     public void setEntityAttribute(String name, EntityAttribute<?> attribute) {
