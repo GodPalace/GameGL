@@ -110,7 +110,7 @@ public class SyncObjectClient<T extends Serializable> extends SyncClient {
 
         @Override
         public void onError(Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 }

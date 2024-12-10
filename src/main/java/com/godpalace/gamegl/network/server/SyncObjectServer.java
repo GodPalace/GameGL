@@ -91,7 +91,7 @@ public class SyncObjectServer extends SyncServer {
 
         @Override
         public void onError(WebSocket webSocket, Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 }

@@ -36,48 +36,66 @@ public class UserManageServer implements Closeable, AutoCloseable {
         public void run() {
             try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
                 while (true) {
-                    Socket socket = server.accept();
-                    BufferedInputStream in = new BufferedInputStream(socket.getInputStream());
+                    try {
+                        Socket socket = server.accept();
+                        BufferedInputStream in = new BufferedInputStream(socket.getInputStream());
 
-                    byte[] buffer = new byte[1024];
-                    int len;
+                        byte[] buffer = new byte[1024];
+                        int len;
 
-                    while ((len = in.read(buffer)) != -1) {
-                        out.write(buffer, 0, len);
+                        while ((len = in.read(buffer)) != -1) {
+                            out.write(buffer, 0, len);
+                        }
+
+                        String content = new String(unPacket(out.toByteArray(), key));
+                        String[] split = content.split("\n");
+
+                        switch (split[0]) {
+                            case "QUERY" -> {
+                            }
+                            case "QUERY-PASSWORD" -> {
+                            }
+                            case "QUERY-EMAIL" -> {
+                            }
+
+                            case "REGISTER" -> {
+                            }  // 注册普通用户
+                            case "LOGIN" -> {
+                            }
+                            case "LOGOUT" -> {
+                            }
+
+                            case "CHANGE-USERNAME" -> {
+                            }
+                            case "CHANGE-PASSWORD" -> {
+                            }
+                            case "CHANGE-EMAIL" -> {
+                            }
+
+                            // root commands
+                            case "ROOT-REGISTER" -> {
+                            }  // 注册管理员用户
+
+                            case "ROOT-QUERY" -> {
+                            }
+                            case "ROOT-QUERY-PASSWORD" -> {
+                            }
+                            case "ROOT-QUERY-EMAIL" -> {
+                            }
+
+                            case "ROOT-REMOVE-USER" -> {
+                            }
+                        }
+
+                        in.close();
+                        socket.close();
+                        out.reset();
+                    } catch (IOException e) {
+                        break;
                     }
-
-                    String content = new String(unPacket(out.toByteArray(), key));
-                    String[] split = content.split("\n");
-
-                    switch (split[0]) {
-                        case "QUERY" -> {}
-                        case "QUERY-PASSWORD" -> {}
-                        case "QUERY-EMAIL" -> {}
-
-                        case "REGISTER" -> {}  // 注册普通用户
-                        case "LOGIN" -> {}
-                        case "LOGOUT" -> {}
-
-                        case "CHANGE-USERNAME" -> {}
-                        case "CHANGE-PASSWORD" -> {}
-                        case "CHANGE-EMAIL" -> {}
-
-                        // root commands
-                        case "ROOT-REGISTER" -> {}  // 注册管理员用户
-
-                        case "ROOT-QUERY" -> {}
-                        case "ROOT-QUERY-PASSWORD" -> {}
-                        case "ROOT-QUERY-EMAIL" -> {}
-
-                        case "ROOT-REMOVE-USER" -> {}
-                    }
-
-                    in.close();
-                    socket.close();
-                    out.reset();
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                throw new RuntimeException(e);
             }
         }
 

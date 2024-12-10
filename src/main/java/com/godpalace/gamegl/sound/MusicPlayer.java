@@ -77,7 +77,7 @@ public class MusicPlayer {
                 soundThread.wait();
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 
@@ -150,7 +150,7 @@ public class MusicPlayer {
                 line.drain();
                 line.close();
             } catch (Exception e) {
-                e.printStackTrace();
+                throw new RuntimeException(e);
             } finally {
                 synchronized (soundThread) {
                     soundThread.notify();

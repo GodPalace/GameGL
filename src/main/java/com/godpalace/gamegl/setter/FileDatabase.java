@@ -170,9 +170,7 @@ public class FileDatabase {
         }
 
         // TODO: add shutdown hook to save variables to file
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            save(file, fields);
-        }));
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> save(file, fields)));
 
         // TODO: set auto save timer
         long time = db.autoSaveTime();

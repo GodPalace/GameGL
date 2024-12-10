@@ -94,7 +94,7 @@ public class SoundEffectPlayer {
                 line.stop();
                 line.close();
             } catch (Exception e) {
-                e.printStackTrace();
+                throw new RuntimeException(e);
             }
         }
     }

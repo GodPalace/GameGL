@@ -39,8 +39,7 @@ public final class DialogUtil {
                         synchronized (frame) {
                             frame.notifyAll();
                         }
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
+                    } catch (Exception ignored) {
                     }
                 }
             }).start();

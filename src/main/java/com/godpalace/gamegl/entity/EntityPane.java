@@ -340,8 +340,7 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
 
                     repaint();
                 } catch (Exception e) {
-                    e.printStackTrace();
-                    return;
+                    throw new RuntimeException(e);
                 }
             }
         }
