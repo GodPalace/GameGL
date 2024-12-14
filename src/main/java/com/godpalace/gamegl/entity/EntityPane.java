@@ -132,6 +132,44 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
         return x1 + w1 >= x2 && x2 + w2 >= x1 && y1 + h1 >= y2 && y2 + h2 >= y1;
     }
 
+    public ContactSurface EntityHitContactSurface(Entity entity1, Entity entity2, int range){
+        return this.EntityHitContactSurface(entity1.getId(), entity2.getId(), range);
+    }
+
+    public ContactSurface EntityHitContactSurface(int id, int id2, int range){
+        Entity entity1 = getEntity(id);
+        Entity entity2 = getEntity(id2);
+
+        int x1 = entity1.getEntityX();
+        int y1 = entity1.getEntityY();
+        int w1 = entity1.getEntityWidth();
+        int h1 = entity1.getEntityHeight();
+        int x2 = entity2.getEntityX();
+        int y2 = entity2.getEntityY();
+        int w2 = entity2.getEntityWidth();
+        int h2 = entity2.getEntityHeight();
+
+        if (!(x1 + w1 >= x2 && x2 + w2 >= x1 && y1 + h1 >= y2 && y2 + h2 >= y1))
+            return ContactSurface.NONE;
+        if (x1 + w1 - x2 <=range &&  y1 + h1 - y2 <=range)
+            return ContactSurface.BOTTOM_LEFT;
+        if (x2 + w2 - x1 <=range && y1 + h1 - y2 <=range)
+            return ContactSurface.BOTTOM_RIGHT;
+        if (x1 + w1 - x2 <=range && y2 + h2 - y1 <=range)
+            return ContactSurface.TOP_LEFT;
+        if (x2 + w2 - x1 <=range && y2 + h2 - y1 <=range)
+            return ContactSurface.TOP_RIGHT;
+        if (x1 + w1 - x2 <=range)
+            return ContactSurface.LEFT;
+        if (x2 + w2 - x1 <=range)
+            return ContactSurface.RIGHT;
+        if (y1 + h1 - y2 <=range)
+            return ContactSurface.BOTTOM;
+        if (y2 + h2 - y1 <=range)
+            return ContactSurface.TOP;
+        return ContactSurface.MIDDLE;
+    }
+
     public Edge getEntityHitEdge(Entity entity) {
         int x = entity.getEntityX();
         int y = entity.getEntityY();
@@ -251,7 +289,7 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
         for (CopyOnWriteArrayList<Entity> layer : entities.values()) {
             for (Entity entity : layer) {
                 if (x >= entity.getEntityX() && x <= entity.getEntityX() + entity.getEntityWidth() &&
-                    y >= entity.getEntityY() && y <= entity.getEntityY() + entity.getEntityHeight()) {
+                        y >= entity.getEntityY() && y <= entity.getEntityY() + entity.getEntityHeight()) {
 
                     if (entity.mouseLogic != null) {
                         entity.doFiredMouseEvent(EntityMouseLogic.LogicType.CLICK, e.getButton(),
@@ -286,22 +324,22 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
 
     @Override
     public void mouseReleased(MouseEvent e) {
-         int x = e.getX();
-         int y = e.getY();
+        int x = e.getX();
+        int y = e.getY();
 
-         for (CopyOnWriteArrayList<Entity> layer : entities.values()) {
-             for (Entity entity : layer) {
-                 if (x >= entity.getEntityX() && x <= entity.getEntityX() + entity.getEntityWidth() &&
-                         y >= entity.getEntityY() && y <= entity.getEntityY() + entity.getEntityHeight()) {
-                     if (entity.mouseLogic != null) {
-                         entity.doFiredMouseEvent(EntityMouseLogic.LogicType.UP, e.getButton(),
-                                 x - entity.getEntityX(), y - entity.getEntityY());
-                     }
-                 }
-             }
-         }
+        for (CopyOnWriteArrayList<Entity> layer : entities.values()) {
+            for (Entity entity : layer) {
+                if (x >= entity.getEntityX() && x <= entity.getEntityX() + entity.getEntityWidth() &&
+                        y >= entity.getEntityY() && y <= entity.getEntityY() + entity.getEntityHeight()) {
+                    if (entity.mouseLogic != null) {
+                        entity.doFiredMouseEvent(EntityMouseLogic.LogicType.UP, e.getButton(),
+                                x - entity.getEntityX(), y - entity.getEntityY());
+                    }
+                }
+            }
+        }
 
-         repaint();
+        repaint();
     }
 
     @Override
@@ -348,5 +386,8 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
 
     public enum Edge {
         TOP, BOTTOM, LEFT, RIGHT, TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT, NONE
+    }
+    public enum ContactSurface {
+        TOP, BOTTOM, LEFT, RIGHT, MIDDLE, TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT, NONE
     }
 }
