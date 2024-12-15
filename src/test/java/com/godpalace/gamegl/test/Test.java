@@ -53,7 +53,7 @@ public class Test {
 
         entity.setEntityNameColor(Color.BLACK);
         entity.setShowName(true);
-        entity.setEntityLoopLogic(runDelay -> {
+        entity.addEntityLoopLogic(runDelay -> {
             EntityPane.ContactSurface contactSurface = entityPane.EntityHitContactSurface(entity,entity2,20);
             switch (contactSurface) {
                 case TOP -> entity.setEntityName("Top");
@@ -71,7 +71,7 @@ public class Test {
 
         entity2.setEntityNameColor(Color.BLACK);
         entity2.setShowName(true);
-        entity2.setEntityLoopLogic(runDelay -> {
+        entity2.addEntityLoopLogic(runDelay -> {
             EntityPane.ContactSurface contactSurface = entityPane.EntityHitContactSurface(entity2,entity,20);
             switch (contactSurface) {
                 case TOP -> entity2.setEntityName("Top");
@@ -86,7 +86,7 @@ public class Test {
                 case NONE -> entity2.setEntityName("None");
             }
         });
-        entity.setEntityKeyboardLogic(new EntityKeyboardLogicAdapter() {
+        entity.addEntityKeyboardLogic(new EntityKeyboardLogicAdapter() {
             @Override
             public void onKeyDown(int key) {
                 if (key == KeyEvent.VK_W) {
@@ -107,7 +107,7 @@ public class Test {
                 }
             }
         });
-        entity2.setEntityKeyboardLogic(new EntityKeyboardLogicAdapter() {
+        entity2.addEntityKeyboardLogic(new EntityKeyboardLogicAdapter() {
             @Override
             public void onKeyDown(int key) {
                 if (key == KeyEvent.VK_UP) {

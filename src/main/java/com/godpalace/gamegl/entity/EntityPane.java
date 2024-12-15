@@ -1,7 +1,9 @@
 package com.godpalace.gamegl.entity;
 
 import com.godpalace.gamegl.entity.logic.EntityKeyboardLogic;
+import com.godpalace.gamegl.entity.logic.EntityLoopLogic;
 import com.godpalace.gamegl.entity.logic.EntityMouseLogic;
+import com.godpalace.gamegl.entity.logic.EntityRadioLogic;
 
 import javax.swing.*;
 import java.awt.*;
@@ -206,8 +208,10 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
     public void sendRadio(String message) {
         for (CopyOnWriteArrayList<Entity> layer : entities.values()) {
             for (Entity entity : layer) {
-                if (entity.radioLogic != null) {
-                    entity.radioLogic.onReceiveRadio(message);
+                if (!entity.radioLogics.isEmpty()) {
+                    for (EntityRadioLogic logic : entity.radioLogics) {
+                        new Thread(() -> logic.onReceiveRadio(message)).start();
+                    }
                 }
             }
         }
@@ -246,7 +250,7 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
     public void keyTyped(KeyEvent e) {
         for (CopyOnWriteArrayList<Entity> layer : entities.values()) {
             for (Entity entity : layer) {
-                if (entity.keyboardLogic != null) {
+                if (entity.keyboardLogics != null) {
                     entity.doFiredKeyboardEvent(EntityKeyboardLogic.LogicType.TYPE, e.getKeyCode());
                 }
             }
@@ -259,7 +263,7 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
     public void keyPressed(KeyEvent e) {
         for (CopyOnWriteArrayList<Entity> layer : entities.values()) {
             for (Entity entity : layer) {
-                if (entity.keyboardLogic != null) {
+                if (entity.keyboardLogics != null) {
                     entity.doFiredKeyboardEvent(EntityKeyboardLogic.LogicType.DOWN, e.getKeyCode());
                 }
             }
@@ -272,7 +276,7 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
     public void keyReleased(KeyEvent e) {
         for (CopyOnWriteArrayList<Entity> layer : entities.values()) {
             for (Entity entity : layer) {
-                if (entity.keyboardLogic != null) {
+                if (entity.keyboardLogics != null) {
                     entity.doFiredKeyboardEvent(EntityKeyboardLogic.LogicType.UP, e.getKeyCode());
                 }
             }
@@ -291,7 +295,7 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
                 if (x >= entity.getEntityX() && x <= entity.getEntityX() + entity.getEntityWidth() &&
                         y >= entity.getEntityY() && y <= entity.getEntityY() + entity.getEntityHeight()) {
 
-                    if (entity.mouseLogic != null) {
+                    if (entity.mouseLogics != null) {
                         entity.doFiredMouseEvent(EntityMouseLogic.LogicType.CLICK, e.getButton(),
                                 x - entity.getEntityX(), y - entity.getEntityY());
                     }
@@ -311,7 +315,7 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
             for (Entity entity : layer) {
                 if (x >= entity.getEntityX() && x <= entity.getEntityX() + entity.getEntityWidth() &&
                         y >= entity.getEntityY() && y <= entity.getEntityY() + entity.getEntityHeight()) {
-                    if (entity.mouseLogic != null) {
+                    if (entity.mouseLogics != null) {
                         entity.doFiredMouseEvent(EntityMouseLogic.LogicType.DOWN, e.getButton(),
                                 x - entity.getEntityX(), y - entity.getEntityY());
                     }
@@ -331,7 +335,7 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
             for (Entity entity : layer) {
                 if (x >= entity.getEntityX() && x <= entity.getEntityX() + entity.getEntityWidth() &&
                         y >= entity.getEntityY() && y <= entity.getEntityY() + entity.getEntityHeight()) {
-                    if (entity.mouseLogic != null) {
+                    if (entity.mouseLogics != null) {
                         entity.doFiredMouseEvent(EntityMouseLogic.LogicType.UP, e.getButton(),
                                 x - entity.getEntityX(), y - entity.getEntityY());
                     }
@@ -360,9 +364,10 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
 
                         for (CopyOnWriteArrayList<Entity> layer : entities.values()) {
                             for (Entity entity : layer) {
-                                if (entity.loopLogic != null) {
-                                    entity.loopLogic.onLoop(System.currentTimeMillis()
-                                            - startTime);
+                                if (!entity.loopLogics.isEmpty()) {
+                                    for (EntityLoopLogic logic : entity.loopLogics) {
+                                        new Thread(() -> logic.onLoop(System.currentTimeMillis() - startTime)).start();
+                                    }
                                 }
                             }
                         }

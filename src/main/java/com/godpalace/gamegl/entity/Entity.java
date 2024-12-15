@@ -8,6 +8,7 @@ import com.godpalace.gamegl.entity.logic.EntityRadioLogic;
 
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
+import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class Entity {
@@ -18,10 +19,10 @@ public abstract class Entity {
     protected NamePosition namePosition;
     protected boolean isShowName, isShowEntity;
 
-    protected EntityKeyboardLogic keyboardLogic;
-    protected EntityMouseLogic mouseLogic;
-    protected EntityLoopLogic loopLogic;
-    protected EntityRadioLogic radioLogic;
+    protected Vector<EntityKeyboardLogic> keyboardLogics;
+    protected Vector<EntityMouseLogic> mouseLogics;
+    protected Vector<EntityLoopLogic> loopLogics;
+    protected Vector<EntityRadioLogic> radioLogics;
 
     protected ConcurrentHashMap<String, EntityAttribute<?>> attributes;
 
@@ -40,10 +41,10 @@ public abstract class Entity {
         this.isShowEntity = true;
         this.color = Color.BLACK;
 
-        this.keyboardLogic = null;
-        this.mouseLogic = null;
-        this.loopLogic = null;
-        this.radioLogic = null;
+        this.keyboardLogics = new Vector<>();
+        this.mouseLogics = new Vector<>();
+        this.loopLogics = new Vector<>();
+        this.radioLogics = new Vector<>();
 
         this.attributes = new ConcurrentHashMap<>();
     }
@@ -140,42 +141,72 @@ public abstract class Entity {
         this.isShowName = b;
     }
 
-    public void setEntityKeyboardLogic(EntityKeyboardLogic logic) {
-        this.keyboardLogic = logic;
+    public void addEntityKeyboardLogic(EntityKeyboardLogic logic) {
+        this.keyboardLogics.add(logic);
+    }
+
+    public void removeEntityKeyboardLogic(EntityKeyboardLogic logic) {
+        this.keyboardLogics.remove(logic);
     }
 
     public void doFiredKeyboardEvent(EntityKeyboardLogic.LogicType type, int key) {
-        if (keyboardLogic == null)
-            throw new RuntimeException("EntityKeyboardLogic is not set.");
+        if (keyboardLogics.isEmpty())
+            throw new RuntimeException("EntityKeyboardLogic is empty.");
 
-        switch (type) {
-            case DOWN -> keyboardLogic.onKeyDown(key);
-            case UP -> keyboardLogic.onKeyUp(key);
-            case TYPE -> keyboardLogic.onKeyTyped(key);
+        for (EntityKeyboardLogic keyboardLogic : keyboardLogics) {
+            new Thread(() -> {
+                switch (type) {
+                    case DOWN:
+                        keyboardLogic.onKeyDown(key);
+                    case UP:
+                        keyboardLogic.onKeyUp(key);
+                    case TYPE:
+                        keyboardLogic.onKeyTyped(key);
+                }
+            }).start();
         }
     }
 
-    public void setEntityMouseLogic(EntityMouseLogic logic) {
-        this.mouseLogic = logic;
+    public void addEntityMouseLogic(EntityMouseLogic logic) {
+        this.mouseLogics.add(logic);
+    }
+
+    public void removeEntityMouseLogic(EntityMouseLogic logic) {
+        this.mouseLogics.remove(logic);
     }
 
     public void doFiredMouseEvent(EntityMouseLogic.LogicType type, int button, int x, int y) {
-        if (mouseLogic == null)
-            throw new RuntimeException("EntityMouseLogic is not set.");
+        if (mouseLogics.isEmpty())
+            throw new RuntimeException("EntityMouseLogic is empty.");
 
-        switch (type) {
-            case DOWN -> mouseLogic.onMouseDown(button, x, y);
-            case UP -> mouseLogic.onMouseUp(button, x, y);
-            case CLICK -> mouseLogic.onMouseClick(button, x, y);
+        for (EntityMouseLogic mouseLogic : mouseLogics) {
+            new Thread(() -> {
+                switch (type) {
+                    case DOWN:
+                        mouseLogic.onMouseDown(button, x, y);
+                    case UP:
+                        mouseLogic.onMouseUp(button, x, y);
+                    case CLICK:
+                        mouseLogic.onMouseClick(button, x, y);
+                }
+            }).start();
         }
     }
 
-    public void setEntityLoopLogic(EntityLoopLogic logic) {
-        this.loopLogic = logic;
+    public void addEntityLoopLogic(EntityLoopLogic logic) {
+        this.loopLogics.add(logic);
     }
 
-    public void setEntityRadioLogic(EntityRadioLogic logic) {
-        this.radioLogic = logic;
+    public void removeEntityLoopLogic(EntityLoopLogic logic) {
+        this.loopLogics.remove(logic);
+    }
+
+    public void addEntityRadioLogic(EntityRadioLogic logic) {
+        this.radioLogics.add(logic);
+    }
+
+    public void removeEntityRadioLogic(EntityRadioLogic logic) {
+        this.radioLogics.remove(logic);
     }
 
     public void moveEntity(int dx, int dy) {
