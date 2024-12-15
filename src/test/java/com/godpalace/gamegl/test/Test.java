@@ -1,31 +1,38 @@
 package com.godpalace.gamegl.test;
 
+import com.godpalace.data.annotation.Data;
+import com.godpalace.data.annotation.LocalDatabase;
+import com.godpalace.data.database.FileDatabaseEngine;
+import com.godpalace.gamegl.component.SelectBoxPane;
 import com.godpalace.gamegl.entity.Entity;
 import com.godpalace.gamegl.entity.EntityPane;
 import com.godpalace.gamegl.entity.RectEntity;
 import com.godpalace.gamegl.entity.logic.EntityKeyboardLogicAdapter;
 import com.godpalace.gamegl.entity.logic.EntityLoopLogic;
-import com.godpalace.gamegl.setter.Data;
-import com.godpalace.gamegl.setter.Database;
-import com.godpalace.gamegl.setter.FileDatabase;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.io.File;
 
-
+@LocalDatabase(path = "entity.db", autoSaveTime = 1)
 public class Test {
-
-    static RectEntity entity, entity2;
+    @Data
+    public static int[] loc1=new int[]{0,0}, loc2=new int[]{100,100};
+    public static RectEntity entity, entity2;
     public static void main(String[] args) throws Exception {
 
+        FileDatabaseEngine.init(Test.class, null);
+
+        System.out.println("loc1: " + loc1[0] + " " + loc1[1]);
+        System.out.println("loc2: " + loc2[0] + " " + loc2[1]);
 
         JFrame frame = new JFrame("Test");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setBounds(500, 500, 800, 600);
 
-        EntityPane entityPane = new EntityPane();
+        SelectBoxPane entityPane = new SelectBoxPane(50, 50);
+        entityPane.setDrawGrid(true);
         new Thread(() -> {
             while (true) {
                 entityPane.repaint();
@@ -36,10 +43,11 @@ public class Test {
                 }
             }
         }).start();
-        entity = new RectEntity("test", 0, 0, 0, 50, 50);
+        entity = new RectEntity("test", 0, loc1[0], loc1[1], 50, 50);
         entity.setEntityColor(Color.CYAN);
         entity.setFill(true);
-        entity2 = new RectEntity("test2", 1, 100, 100, 50, 50);
+
+        entity2 = new RectEntity("test2", 1, loc2[0], loc2[1], 50, 50);
         entity2.setEntityColor(Color.GREEN);
         entity2.setFill(true);
 
@@ -83,27 +91,40 @@ public class Test {
             public void onKeyDown(int key) {
                 if (key == KeyEvent.VK_W) {
                     entity.moveEntity(0, -20);
+                    loc1[1] -= 20;
                 }
                 if (key == KeyEvent.VK_S) {
                     entity.moveEntity(0, 20);
+                    loc1[1] += 20;
                 }
                 if (key == KeyEvent.VK_A) {
                     entity.moveEntity(-20, 0);
+                    loc1[0] -= 20;
                 }
                 if (key == KeyEvent.VK_D) {
                     entity.moveEntity(20, 0);
+                    loc1[0] += 20;
                 }
+            }
+        });
+        entity2.setEntityKeyboardLogic(new EntityKeyboardLogicAdapter() {
+            @Override
+            public void onKeyDown(int key) {
                 if (key == KeyEvent.VK_UP) {
                     entity2.moveEntity(0, -20);
+                    loc2[1] -= 20;
                 }
                 if (key == KeyEvent.VK_DOWN) {
                     entity2.moveEntity(0, 20);
+                    loc2[1] += 20;
                 }
                 if (key == KeyEvent.VK_LEFT) {
                     entity2.moveEntity(-20, 0);
+                    loc2[0] -= 20;
                 }
                 if (key == KeyEvent.VK_RIGHT) {
                     entity2.moveEntity(20, 0);
+                    loc2[0] += 20;
                 }
             }
         });

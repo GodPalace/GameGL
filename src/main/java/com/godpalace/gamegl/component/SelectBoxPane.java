@@ -8,14 +8,15 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
 
 public class SelectBoxPane extends EntityPane implements MouseMotionListener {
-    private boolean isDraw;
+    private boolean isDraw, isDrawGird;
     private int x, y, r, width, height;
-    private Color borderColor;
+    private Color borderColor, GridColor;
 
     public SelectBoxPane(int width, int height) {
         this.width = width;
         this.height = height;
         this.isDraw = false;
+        this.isDrawGird = false;
 
         this.addMouseMotionListener(this);
         this.addMouseListener(new MouseAdapter() {
@@ -33,6 +34,7 @@ public class SelectBoxPane extends EntityPane implements MouseMotionListener {
         });
 
         this.borderColor = Color.BLACK;
+        this.GridColor = Color.GRAY;
         this.r = 0;
     }
 
@@ -68,14 +70,40 @@ public class SelectBoxPane extends EntityPane implements MouseMotionListener {
         return this.borderColor;
     }
 
+    public void setGridColor(Color GridColor) {
+        this.GridColor = GridColor;
+    }
+
+    public Color getGridColor() {
+        return this.GridColor;
+    }
+
+    public void setDrawGrid(boolean isDrawGird) {
+        this.isDrawGird = isDrawGird;
+    }
+
+    public boolean isDrawGrid() {
+        return this.isDrawGird;
+    }
+
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 
+        if (isDrawGird) {
+            g.setColor(GridColor);
+            for (int i = 0; i < this.getWidth(); i += width) {
+                g.drawLine(i, 0, i, this.getHeight());
+            }
+            for (int i = 0; i < this.getHeight(); i += height) {
+                g.drawLine(0, i, this.getWidth(), i);
+            }
+        }
         if (isDraw) {
             g.setColor(borderColor);
             g.drawRoundRect(x, y, width, height, r, r);
         }
+
     }
 
     @Override
