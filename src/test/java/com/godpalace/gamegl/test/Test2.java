@@ -1,14 +1,13 @@
 package com.godpalace.gamegl.test;
 
 import com.godpalace.gamegl.entity.EntityPane;
+import com.godpalace.gamegl.entity.EntityUtils;
 import com.godpalace.gamegl.entity.ImageEntity;
 import com.godpalace.gamegl.entity.attribute.EntityHealthAttribute;
-import com.godpalace.gamegl.entity.logic.EntityKeyboardLogicAdapter;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.KeyEvent;
 import java.io.IOException;
 
 public class Test2 {
@@ -25,28 +24,7 @@ public class Test2 {
         Image img = ImageIO.read(Test2.class.getResourceAsStream("/test.png"));
         entity = new ImageEntity(img, "test", 1, 0, 0, 30, 30);
         entity.setEntityAttribute("Health", health);
-
-        entity.addEntityKeyboardLogic(new EntityKeyboardLogicAdapter() {
-            @Override
-            public void onKeyDown(int key) {
-                System.out.println("Key down: " + key);
-            }
-
-            @Override
-            public void onKeyDowning(int key) {
-                switch (key) {
-                    case KeyEvent.VK_A -> entity.moveEntity(-3, 0);
-                    case KeyEvent.VK_D -> entity.moveEntity(3, 0);
-                    case KeyEvent.VK_W -> entity.moveEntity(0, -3);
-                    case KeyEvent.VK_S -> entity.moveEntity(0, 3);
-                }
-            }
-
-            @Override
-            public void onKeyUp(int key) {
-                System.out.println("Key up: " + key);
-            }
-        });
+        EntityUtils.initMoveLogic(entity, 3);
 
         pane.addEntity(entity);
         frame.setContentPane(pane);
