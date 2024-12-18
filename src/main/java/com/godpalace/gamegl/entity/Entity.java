@@ -8,7 +8,7 @@ import com.godpalace.gamegl.entity.logic.EntityRadioLogic;
 
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
-import java.util.Vector;
+import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class Entity {
@@ -19,10 +19,10 @@ public abstract class Entity {
     protected NamePosition namePosition;
     protected boolean isShowName, isShowEntity;
 
-    protected Vector<EntityKeyboardLogic> keyboardLogics;
-    protected Vector<EntityMouseLogic> mouseLogics;
-    protected Vector<EntityLoopLogic> loopLogics;
-    protected Vector<EntityRadioLogic> radioLogics;
+    protected ArrayList<EntityKeyboardLogic> keyboardLogics;
+    protected ArrayList<EntityMouseLogic> mouseLogics;
+    protected ArrayList<EntityLoopLogic> loopLogics;
+    protected ArrayList<EntityRadioLogic> radioLogics;
 
     protected ConcurrentHashMap<String, EntityAttribute<?>> attributes;
 
@@ -41,10 +41,10 @@ public abstract class Entity {
         this.isShowEntity = true;
         this.color = Color.BLACK;
 
-        this.keyboardLogics = new Vector<>();
-        this.mouseLogics = new Vector<>();
-        this.loopLogics = new Vector<>();
-        this.radioLogics = new Vector<>();
+        this.keyboardLogics = new ArrayList<>();
+        this.mouseLogics = new ArrayList<>();
+        this.loopLogics = new ArrayList<>();
+        this.radioLogics = new ArrayList<>();
 
         this.attributes = new ConcurrentHashMap<>();
     }
@@ -141,71 +141,65 @@ public abstract class Entity {
         this.isShowName = b;
     }
 
-    public void addEntityKeyboardLogic(EntityKeyboardLogic logic) {
+    public synchronized void addEntityKeyboardLogic(EntityKeyboardLogic logic) {
         this.keyboardLogics.add(logic);
     }
 
-    public void removeEntityKeyboardLogic(EntityKeyboardLogic logic) {
+    public synchronized void removeEntityKeyboardLogic(EntityKeyboardLogic logic) {
         this.keyboardLogics.remove(logic);
     }
 
-    public void doFiredKeyboardEvent(EntityKeyboardLogic.LogicType type, int key) {
+    public synchronized void doFiredKeyboardEvent(EntityKeyboardLogic.LogicType type, int key) {
         if (keyboardLogics.isEmpty())
             throw new RuntimeException("EntityKeyboardLogic is empty.");
 
         for (EntityKeyboardLogic keyboardLogic : keyboardLogics) {
-            new Thread(() -> {
-                switch (type) {
-                    case DOWN:
-                        keyboardLogic.onKeyDown(key);
-                    case UP:
-                        keyboardLogic.onKeyUp(key);
-                    case TYPE:
-                        keyboardLogic.onKeyTyped(key);
-                }
-            }).start();
+            switch (type) {
+                case DOWN:
+                    keyboardLogic.onKeyDown(key);
+                case UP:
+                    keyboardLogic.onKeyUp(key);
+            }
         }
     }
 
-    public void addEntityMouseLogic(EntityMouseLogic logic) {
+    public synchronized void addEntityMouseLogic(EntityMouseLogic logic) {
         this.mouseLogics.add(logic);
     }
 
-    public void removeEntityMouseLogic(EntityMouseLogic logic) {
+    public synchronized void removeEntityMouseLogic(EntityMouseLogic logic) {
         this.mouseLogics.remove(logic);
     }
 
-    public void doFiredMouseEvent(EntityMouseLogic.LogicType type, int button, int x, int y) {
+    public synchronized void doFiredMouseEvent(EntityMouseLogic.LogicType type, int button, int x, int y) {
         if (mouseLogics.isEmpty())
             throw new RuntimeException("EntityMouseLogic is empty.");
 
         for (EntityMouseLogic mouseLogic : mouseLogics) {
-            new Thread(() -> {
-                switch (type) {
-                    case DOWN:
-                        mouseLogic.onMouseDown(button, x, y);
-                    case UP:
-                        mouseLogic.onMouseUp(button, x, y);
-                    case CLICK:
-                        mouseLogic.onMouseClick(button, x, y);
-                }
-            }).start();
+            switch (type) {
+                case DOWN:
+                    mouseLogic.onMouseDown(button, x, y);
+                case UP:
+                    mouseLogic.onMouseUp(button, x, y);
+                case CLICK:
+                    mouseLogic.onMouseClick(button, x, y);
+            }
         }
     }
 
-    public void addEntityLoopLogic(EntityLoopLogic logic) {
+    public synchronized void addEntityLoopLogic(EntityLoopLogic logic) {
         this.loopLogics.add(logic);
     }
 
-    public void removeEntityLoopLogic(EntityLoopLogic logic) {
+    public synchronized void removeEntityLoopLogic(EntityLoopLogic logic) {
         this.loopLogics.remove(logic);
     }
 
-    public void addEntityRadioLogic(EntityRadioLogic logic) {
+    public synchronized void addEntityRadioLogic(EntityRadioLogic logic) {
         this.radioLogics.add(logic);
     }
 
-    public void removeEntityRadioLogic(EntityRadioLogic logic) {
+    public synchronized void removeEntityRadioLogic(EntityRadioLogic logic) {
         this.radioLogics.remove(logic);
     }
 
@@ -219,7 +213,7 @@ public abstract class Entity {
         this.setEntityY(y);
     }
 
-    public void setEntityAttribute(String name, EntityAttribute<?> attribute) {
+    public synchronized void setEntityAttribute(String name, EntityAttribute<?> attribute) {
         this.attributes.put(name, attribute);
     }
 
@@ -230,19 +224,19 @@ public abstract class Entity {
         return this.attributes.get(name);
     }
 
-    public void removeEntityAttribute(String name) {
+    public synchronized void removeEntityAttribute(String name) {
         this.attributes.remove(name);
     }
 
-    public int getEntityAttributeCount() {
+    public synchronized int getEntityAttributeCount() {
         return this.attributes.size();
     }
 
-    public boolean hasEntityAttribute(String name) {
+    public synchronized boolean hasEntityAttribute(String name) {
         return this.attributes.containsKey(name);
     }
 
-    public void clearEntityAttributes() {
+    public synchronized void clearEntityAttributes() {
         this.attributes.clear();
     }
 

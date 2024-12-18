@@ -21,4 +21,9 @@ public class EntityAttribute<T extends Serializable> implements Serializable {
     }
 
     public void update(Graphics g, Entity entity) {}
+
+    @Override
+    public String toString() {
+        return "EntityAttribute{" + value + "}";
+    }
 }

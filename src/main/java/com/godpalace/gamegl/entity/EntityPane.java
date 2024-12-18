@@ -12,14 +12,20 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.Comparator;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.HashMap;
+import java.util.concurrent.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 // 注意: 继承EntityPane类并重写paintComponent方法时, 必须调用super.paintComponent(g)方法
 public class EntityPane extends JPanel implements KeyListener, MouseListener {
     private final ConcurrentSkipListMap<Integer, CopyOnWriteArrayList<Entity>> entities;
     private final ConcurrentHashMap<Integer, Integer> idToLayers;
+
+    private final ThreadPoolExecutor executor;
+    private final HashMap<Integer, Boolean> isKeyPressed;
+    private final Lock keyPressedLock;
+
     protected Color backgroundColor;
     protected Thread loopThread;
 
@@ -27,6 +33,11 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
         entities = new ConcurrentSkipListMap<>(Comparator.comparingInt(o -> o));
         idToLayers = new ConcurrentHashMap<>();
         backgroundColor = null;
+
+        executor = new ThreadPoolExecutor(26, 250,
+                60L, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
+        isKeyPressed = new HashMap<>();
+        keyPressedLock = new ReentrantLock();
 
         loopThread = new Thread(new LoopThread());
         loopThread.start();
@@ -134,11 +145,11 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
         return x1 + w1 >= x2 && x2 + w2 >= x1 && y1 + h1 >= y2 && y2 + h2 >= y1;
     }
 
-    public ContactSurface EntityHitContactSurface(Entity entity1, Entity entity2, int range){
-        return this.EntityHitContactSurface(entity1.getId(), entity2.getId(), range);
+    public ContactSurface getEntityHitContactSurface(Entity entity1, Entity entity2, int range){
+        return this.getEntityHitContactSurface(entity1.getId(), entity2.getId(), range);
     }
 
-    public ContactSurface EntityHitContactSurface(int id, int id2, int range){
+    public ContactSurface getEntityHitContactSurface(int id, int id2, int range){
         Entity entity1 = getEntity(id);
         Entity entity2 = getEntity(id2);
 
@@ -244,45 +255,73 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
                 }
             }
         }
+
+        g.dispose();
     }
 
     @Override
     public void keyTyped(KeyEvent e) {
-        for (CopyOnWriteArrayList<Entity> layer : entities.values()) {
-            for (Entity entity : layer) {
-                if (entity.keyboardLogics != null) {
-                    entity.doFiredKeyboardEvent(EntityKeyboardLogic.LogicType.TYPE, e.getKeyCode());
-                }
-            }
-        }
-
-        repaint();
     }
 
     @Override
     public void keyPressed(KeyEvent e) {
-        for (CopyOnWriteArrayList<Entity> layer : entities.values()) {
-            for (Entity entity : layer) {
-                if (entity.keyboardLogics != null) {
-                    entity.doFiredKeyboardEvent(EntityKeyboardLogic.LogicType.DOWN, e.getKeyCode());
-                }
-            }
-        }
+        int key = e.getKeyCode();
 
-        repaint();
+        try {
+            keyPressedLock.lock();
+
+            if (!isKeyPressed.containsKey(key)) isKeyPressed.put(key, false);
+            if (isKeyPressed.get(key)) return;
+
+            isKeyPressed.put(key, true);
+            executor.execute(() -> {
+                while (isKeyPressed.get(key)) {
+                    for (CopyOnWriteArrayList<Entity> layer : entities.values()) {
+                        for (Entity entity : layer) {
+                            if (!entity.keyboardLogics.isEmpty()) {
+                                entity.doFiredKeyboardEvent(
+                                        EntityKeyboardLogic.LogicType.DOWN, e.getKeyCode());
+                            }
+                        }
+                    }
+
+                    repaint();
+
+                    try {
+                        synchronized (this) {
+                            wait(10);
+                        }
+                    } catch (InterruptedException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                }
+            });
+        } finally {
+            keyPressedLock.unlock();
+        }
     }
 
     @Override
     public void keyReleased(KeyEvent e) {
-        for (CopyOnWriteArrayList<Entity> layer : entities.values()) {
-            for (Entity entity : layer) {
-                if (entity.keyboardLogics != null) {
-                    entity.doFiredKeyboardEvent(EntityKeyboardLogic.LogicType.UP, e.getKeyCode());
+        int key = e.getKeyCode();
+
+        try {
+            keyPressedLock.lock();
+
+            isKeyPressed.put(key, false);
+            for (CopyOnWriteArrayList<Entity> layer : entities.values()) {
+                for (Entity entity : layer) {
+                    if (!entity.keyboardLogics.isEmpty()) {
+                        entity.doFiredKeyboardEvent(
+                                EntityKeyboardLogic.LogicType.UP, e.getKeyCode());
+                    }
                 }
             }
-        }
 
-        repaint();
+            repaint();
+        } finally {
+            keyPressedLock.unlock();
+        }
     }
 
     @Override
@@ -295,7 +334,7 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
                 if (x >= entity.getEntityX() && x <= entity.getEntityX() + entity.getEntityWidth() &&
                         y >= entity.getEntityY() && y <= entity.getEntityY() + entity.getEntityHeight()) {
 
-                    if (entity.mouseLogics != null) {
+                    if (!entity.mouseLogics.isEmpty()) {
                         entity.doFiredMouseEvent(EntityMouseLogic.LogicType.CLICK, e.getButton(),
                                 x - entity.getEntityX(), y - entity.getEntityY());
                     }
@@ -315,7 +354,7 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
             for (Entity entity : layer) {
                 if (x >= entity.getEntityX() && x <= entity.getEntityX() + entity.getEntityWidth() &&
                         y >= entity.getEntityY() && y <= entity.getEntityY() + entity.getEntityHeight()) {
-                    if (entity.mouseLogics != null) {
+                    if (!entity.mouseLogics.isEmpty()) {
                         entity.doFiredMouseEvent(EntityMouseLogic.LogicType.DOWN, e.getButton(),
                                 x - entity.getEntityX(), y - entity.getEntityY());
                     }
@@ -335,7 +374,7 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
             for (Entity entity : layer) {
                 if (x >= entity.getEntityX() && x <= entity.getEntityX() + entity.getEntityWidth() &&
                         y >= entity.getEntityY() && y <= entity.getEntityY() + entity.getEntityHeight()) {
-                    if (entity.mouseLogics != null) {
+                    if (!entity.mouseLogics.isEmpty()) {
                         entity.doFiredMouseEvent(EntityMouseLogic.LogicType.UP, e.getButton(),
                                 x - entity.getEntityX(), y - entity.getEntityY());
                     }
@@ -383,7 +422,8 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
 
                     repaint();
                 } catch (Exception e) {
-                    throw new RuntimeException(e);
+                    e.printStackTrace();
+                    break;
                 }
             }
         }
@@ -392,6 +432,7 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
     public enum Edge {
         TOP, BOTTOM, LEFT, RIGHT, TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT, NONE
     }
+
     public enum ContactSurface {
         TOP, BOTTOM, LEFT, RIGHT, MIDDLE, TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT, NONE
     }

@@ -9,8 +9,7 @@ public class EntityHealthAttribute extends EntityAttribute<Integer> {
 
     public EntityHealthAttribute(int maxHealth, int value) {
         super(value);
-
-        this.maxHealth = maxHealth;
+        this.setMaxHealth(maxHealth);
     }
 
     @Override
@@ -33,6 +32,26 @@ public class EntityHealthAttribute extends EntityAttribute<Integer> {
         return maxHealth;
     }
 
+    public void damage(int damage) {
+        if (damage < 0)
+            throw new IllegalArgumentException("Damage cannot be negative.");
+
+        value -= damage;
+        if (value < 0) value = 0;
+    }
+
+    public void heal(int heal) {
+        if (heal < 0)
+            throw new IllegalArgumentException("Heal cannot be negative.");
+
+        value += heal;
+        if (value > maxHealth) value = maxHealth;
+    }
+
+    public boolean isDead() {
+        return value <= 0;
+    }
+
     @Override
     public void update(Graphics g, Entity entity) {
         g.setColor(Color.BLACK);
@@ -44,5 +63,10 @@ public class EntityHealthAttribute extends EntityAttribute<Integer> {
         g.fillRect(entity.getEntityX() + entity.getEntityWidth() / 2 - 49,
                    entity.getEntityY() - 14,
                       (int) ((float) value / (float) maxHealth * 100) - 1, 9);
+    }
+
+    @Override
+    public String toString() {
+        return "Health: " + value;
     }
 }
