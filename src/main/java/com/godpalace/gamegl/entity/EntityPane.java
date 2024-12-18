@@ -273,6 +273,15 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
             if (!isKeyPressed.containsKey(key)) isKeyPressed.put(key, false);
             if (isKeyPressed.get(key)) return;
 
+            for (CopyOnWriteArrayList<Entity> layer : entities.values()) {
+                for (Entity entity : layer) {
+                    if (!entity.keyboardLogics.isEmpty()) {
+                        entity.doFiredKeyboardEvent(
+                                EntityKeyboardLogic.LogicType.DOWN, e.getKeyCode());
+                    }
+                }
+            }
+
             isKeyPressed.put(key, true);
             executor.execute(() -> {
                 while (isKeyPressed.get(key)) {
@@ -280,7 +289,7 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
                         for (Entity entity : layer) {
                             if (!entity.keyboardLogics.isEmpty()) {
                                 entity.doFiredKeyboardEvent(
-                                        EntityKeyboardLogic.LogicType.DOWN, e.getKeyCode());
+                                        EntityKeyboardLogic.LogicType.DOWNING, e.getKeyCode());
                             }
                         }
                     }

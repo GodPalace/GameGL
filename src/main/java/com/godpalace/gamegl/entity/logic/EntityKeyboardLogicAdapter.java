@@ -8,4 +8,8 @@ public class EntityKeyboardLogicAdapter implements EntityKeyboardLogic {
     @Override
     public void onKeyUp(int key) {
     }
+
+    @Override
+    public void onKeyDowning(int key) {
+    }
 }

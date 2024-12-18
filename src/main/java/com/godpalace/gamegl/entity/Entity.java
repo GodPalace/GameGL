@@ -155,10 +155,9 @@ public abstract class Entity {
 
         for (EntityKeyboardLogic keyboardLogic : keyboardLogics) {
             switch (type) {
-                case DOWN:
-                    keyboardLogic.onKeyDown(key);
-                case UP:
-                    keyboardLogic.onKeyUp(key);
+                case DOWN -> keyboardLogic.onKeyDown(key);
+                case UP -> keyboardLogic.onKeyUp(key);
+                case DOWNING -> keyboardLogic.onKeyDowning(key);
             }
         }
     }
@@ -177,12 +176,9 @@ public abstract class Entity {
 
         for (EntityMouseLogic mouseLogic : mouseLogics) {
             switch (type) {
-                case DOWN:
-                    mouseLogic.onMouseDown(button, x, y);
-                case UP:
-                    mouseLogic.onMouseUp(button, x, y);
-                case CLICK:
-                    mouseLogic.onMouseClick(button, x, y);
+                case DOWN -> mouseLogic.onMouseDown(button, x, y);
+                case UP -> mouseLogic.onMouseUp(button, x, y);
+                case CLICK -> mouseLogic.onMouseClick(button, x, y);
             }
         }
     }

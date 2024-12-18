@@ -29,12 +29,22 @@ public class Test2 {
         entity.addEntityKeyboardLogic(new EntityKeyboardLogicAdapter() {
             @Override
             public void onKeyDown(int key) {
+                System.out.println("Key down: " + key);
+            }
+
+            @Override
+            public void onKeyDowning(int key) {
                 switch (key) {
                     case KeyEvent.VK_A -> entity.moveEntity(-3, 0);
                     case KeyEvent.VK_D -> entity.moveEntity(3, 0);
                     case KeyEvent.VK_W -> entity.moveEntity(0, -3);
                     case KeyEvent.VK_S -> entity.moveEntity(0, 3);
                 }
+            }
+
+            @Override
+            public void onKeyUp(int key) {
+                System.out.println("Key up: " + key);
             }
         });
 
