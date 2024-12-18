@@ -13,12 +13,15 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Random;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 // 注意: 继承EntityPane类并重写paintComponent方法时, 必须调用super.paintComponent(g)方法
 public class EntityPane extends JPanel implements KeyListener, MouseListener {
+    private static final Random random = new Random();
+
     private final ConcurrentSkipListMap<Integer, CopyOnWriteArrayList<Entity>> entities;
     private final ConcurrentHashMap<Integer, Integer> idToLayers;
 
@@ -45,6 +48,16 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
         this.setFocusable(true);
         this.addKeyListener(this);
         this.addMouseListener(this);
+    }
+
+    public int randomId() {
+        int id;
+
+        do {
+            id = random.nextInt(Integer.MAX_VALUE);
+        } while (idToLayers.containsKey(id));
+
+        return id;
     }
 
     public final int getLayerCount() {

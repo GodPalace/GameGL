@@ -4,6 +4,7 @@ import com.godpalace.gamegl.entity.EntityPane;
 import com.godpalace.gamegl.entity.EntityUtils;
 import com.godpalace.gamegl.entity.ImageEntity;
 import com.godpalace.gamegl.entity.attribute.EntityHealthAttribute;
+import com.godpalace.gamegl.entity.attribute.EntityIdAttribute;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -22,8 +23,9 @@ public class Test2 {
         frame.setLocationRelativeTo(null);
 
         Image img = ImageIO.read(Test2.class.getResourceAsStream("/test.png"));
-        entity = new ImageEntity(img, "test", 1, 0, 0, 30, 30);
+        entity = new ImageEntity(img, "test", pane.randomId(), 0, 0, 30, 30);
         entity.setEntityAttribute("Health", health);
+        entity.setEntityAttribute("Id", new EntityIdAttribute(entity.getId()));
         EntityUtils.initMoveLogic(entity, 3);
 
         pane.addEntity(entity);
