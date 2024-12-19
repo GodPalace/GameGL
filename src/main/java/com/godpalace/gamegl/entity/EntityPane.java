@@ -319,7 +319,10 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
                         y >= entity.getEntityY() && y <= entity.getEntityY() + entity.getEntityHeight()) {
 
                     if (!entity.mouseLogics.isEmpty()) {
-                        entity.doFiredMouseEvent(EntityMouseLogic.LogicType.CLICK, e.getButton(),
+                        entity.doFiredMouseEvent(
+                                EntityMouseLogic.LogicType.CLICK,
+                                e.getButton(),
+                                e.getClickCount(),
                                 x - entity.getEntityX(), y - entity.getEntityY());
                     }
                 }
@@ -340,7 +343,7 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
                         y >= entity.getEntityY() && y <= entity.getEntityY() + entity.getEntityHeight()) {
                     if (!entity.mouseLogics.isEmpty()) {
                         entity.doFiredMouseEvent(EntityMouseLogic.LogicType.DOWN, e.getButton(),
-                                x - entity.getEntityX(), y - entity.getEntityY());
+                                1, x - entity.getEntityX(), y - entity.getEntityY());
                     }
                 }
             }
@@ -360,7 +363,7 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
                         y >= entity.getEntityY() && y <= entity.getEntityY() + entity.getEntityHeight()) {
                     if (!entity.mouseLogics.isEmpty()) {
                         entity.doFiredMouseEvent(EntityMouseLogic.LogicType.UP, e.getButton(),
-                                x - entity.getEntityX(), y - entity.getEntityY());
+                                1, x - entity.getEntityX(), y - entity.getEntityY());
                     }
                 }
             }

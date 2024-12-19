@@ -170,15 +170,16 @@ public abstract class Entity {
         this.mouseLogics.remove(logic);
     }
 
-    public synchronized void doFiredMouseEvent(EntityMouseLogic.LogicType type, int button, int x, int y) {
+    public synchronized void doFiredMouseEvent(
+            EntityMouseLogic.LogicType type, int button, int count, int x, int y) {
         if (mouseLogics.isEmpty())
             throw new RuntimeException("EntityMouseLogic is empty.");
 
         for (EntityMouseLogic mouseLogic : mouseLogics) {
             switch (type) {
-                case DOWN -> mouseLogic.onMouseDown(button, x, y);
-                case UP -> mouseLogic.onMouseUp(button, x, y);
-                case CLICK -> mouseLogic.onMouseClick(button, x, y);
+                case DOWN -> mouseLogic.onMouseDown(button, count, x, y);
+                case UP -> mouseLogic.onMouseUp(button, count, x, y);
+                case CLICK -> mouseLogic.onMouseClick(button, count, x, y);
             }
         }
     }

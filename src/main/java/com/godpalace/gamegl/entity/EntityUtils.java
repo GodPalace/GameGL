@@ -5,6 +5,8 @@ import com.godpalace.gamegl.entity.logic.EntityKeyboardLogicAdapter;
 import java.awt.event.KeyEvent;
 
 public class EntityUtils {
+    private EntityUtils() {}
+
     public static void initMoveLogic(Entity entity, int speed) {
         entity.addEntityKeyboardLogic(new EntityKeyboardLogicAdapter() {
             @Override
