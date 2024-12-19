@@ -14,9 +14,10 @@ import java.awt.event.MouseListener;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Random;
-import java.util.concurrent.*;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 // 注意: 继承EntityPane类并重写paintComponent方法时, 必须调用super.paintComponent(g)方法
 public class EntityPane extends JPanel implements KeyListener, MouseListener {
@@ -25,25 +26,19 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
     private final ConcurrentSkipListMap<Integer, CopyOnWriteArrayList<Entity>> entities;
     private final ConcurrentHashMap<Integer, Integer> idToLayers;
 
-    private final ThreadPoolExecutor executor;
-    private final HashMap<Integer, Boolean> isKeyPressed;
-    private final Lock keyPressedLock;
+    private final ConcurrentSkipListSet<Integer> isKeyPressed;
 
-    protected Color backgroundColor;
-    protected Thread loopThread;
+    private Color backgroundColor;
 
     public EntityPane() {
         entities = new ConcurrentSkipListMap<>(Comparator.comparingInt(o -> o));
         idToLayers = new ConcurrentHashMap<>();
         backgroundColor = null;
 
-        executor = new ThreadPoolExecutor(26, 250,
-                60L, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
-        isKeyPressed = new HashMap<>();
-        keyPressedLock = new ReentrantLock();
+        isKeyPressed = new ConcurrentSkipListSet<>();
 
-        loopThread = new Thread(new LoopThread());
-        loopThread.start();
+        new Thread(new LoopThread()).start();
+        new Thread(new KeyEventThread()).start();
 
         this.setFocusable(true);
         this.addKeyListener(this);
@@ -279,47 +274,22 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
     @Override
     public void keyPressed(KeyEvent e) {
         int key = e.getKeyCode();
+        boolean isEmpty = isKeyPressed.isEmpty();
 
-        try {
-            keyPressedLock.lock();
-
-            if (!isKeyPressed.containsKey(key)) isKeyPressed.put(key, false);
-            if (isKeyPressed.get(key)) return;
-
-            for (CopyOnWriteArrayList<Entity> layer : entities.values()) {
-                for (Entity entity : layer) {
-                    if (!entity.keyboardLogics.isEmpty()) {
-                        entity.doFiredKeyboardEvent(
-                                EntityKeyboardLogic.LogicType.DOWN, e.getKeyCode());
-                    }
+        isKeyPressed.add(key);
+        for (CopyOnWriteArrayList<Entity> layer : entities.values()) {
+            for (Entity entity : layer) {
+                if (!entity.keyboardLogics.isEmpty()) {
+                    entity.doFiredKeyboardEvent(
+                            EntityKeyboardLogic.LogicType.DOWN, key);
                 }
             }
+        }
 
-            isKeyPressed.put(key, true);
-            executor.execute(() -> {
-                while (isKeyPressed.get(key)) {
-                    for (CopyOnWriteArrayList<Entity> layer : entities.values()) {
-                        for (Entity entity : layer) {
-                            if (!entity.keyboardLogics.isEmpty()) {
-                                entity.doFiredKeyboardEvent(
-                                        EntityKeyboardLogic.LogicType.DOWNING, e.getKeyCode());
-                            }
-                        }
-                    }
-
-                    repaint();
-
-                    try {
-                        synchronized (this) {
-                            wait(10);
-                        }
-                    } catch (InterruptedException ex) {
-                        throw new RuntimeException(ex);
-                    }
-                }
-            });
-        } finally {
-            keyPressedLock.unlock();
+        if (isEmpty) {
+            synchronized (isKeyPressed) {
+                isKeyPressed.notifyAll();
+            }
         }
     }
 
@@ -327,22 +297,14 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
     public void keyReleased(KeyEvent e) {
         int key = e.getKeyCode();
 
-        try {
-            keyPressedLock.lock();
-
-            isKeyPressed.put(key, false);
-            for (CopyOnWriteArrayList<Entity> layer : entities.values()) {
-                for (Entity entity : layer) {
-                    if (!entity.keyboardLogics.isEmpty()) {
-                        entity.doFiredKeyboardEvent(
-                                EntityKeyboardLogic.LogicType.UP, e.getKeyCode());
-                    }
+        isKeyPressed.remove(key);
+        for (CopyOnWriteArrayList<Entity> layer : entities.values()) {
+            for (Entity entity : layer) {
+                if (!entity.keyboardLogics.isEmpty()) {
+                    entity.doFiredKeyboardEvent(
+                            EntityKeyboardLogic.LogicType.UP, key);
                 }
             }
-
-            repaint();
-        } finally {
-            keyPressedLock.unlock();
         }
     }
 
@@ -445,6 +407,40 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
                     repaint();
                 } catch (Exception e) {
                     e.printStackTrace();
+                    break;
+                }
+            }
+        }
+    }
+
+    protected class KeyEventThread implements Runnable {
+        @Override
+        public void run() {
+            while (true) {
+                try {
+                    if (isKeyPressed.isEmpty()) {
+                        synchronized (isKeyPressed) {
+                            isKeyPressed.wait();
+                        }
+                    }
+
+                    for (CopyOnWriteArrayList<Entity> layer : entities.values()) {
+                        for (Entity entity : layer) {
+                            if (!entity.keyboardLogics.isEmpty()) {
+                                for (Integer key : isKeyPressed) {
+                                    entity.doFiredKeyboardEvent(
+                                            EntityKeyboardLogic.LogicType.DOWNING, key);
+                                }
+                            }
+                        }
+                    }
+
+                    repaint();
+
+                    synchronized (isKeyPressed) {
+                        isKeyPressed.wait(10);
+                    }
+                } catch (Exception e) {
                     break;
                 }
             }
