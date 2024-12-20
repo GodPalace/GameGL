@@ -11,8 +11,8 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.util.Arrays;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
@@ -107,6 +107,12 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
             entities.remove(layer);
         }
 
+        repaint();
+    }
+
+    public final void removeAllEntities() {
+        entities.clear();
+        idToLayers.clear();
         repaint();
     }
 
@@ -274,6 +280,8 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
     @Override
     public void keyPressed(KeyEvent e) {
         int key = e.getKeyCode();
+        if (isKeyPressed.contains(key)) return;
+
         boolean isEmpty = isKeyPressed.isEmpty();
 
         isKeyPressed.add(key);
@@ -392,14 +400,14 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
                             for (Entity entity : layer) {
                                 if (!entity.loopLogics.isEmpty()) {
                                     for (EntityLoopLogic logic : entity.loopLogics) {
-                                        new Thread(() -> logic.onLoop(System.currentTimeMillis() - startTime)).start();
+                                        logic.onLoop(System.currentTimeMillis() - startTime);
                                     }
                                 }
                             }
                         }
 
                         synchronized (entities) {
-                            entities.wait(25);
+                            entities.wait(10);
                         }
                     } else {
                         synchronized (entities) {
@@ -409,7 +417,7 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
 
                     repaint();
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    System.err.println(Arrays.toString(e.getStackTrace()));
                     break;
                 }
             }

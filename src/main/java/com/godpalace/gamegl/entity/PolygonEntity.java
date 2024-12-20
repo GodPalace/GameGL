@@ -37,6 +37,18 @@ public class PolygonEntity extends Entity {
     }
 
     @Override
+    public void moveEntityTo(int x, int y) {
+        polygon.translate(x - this.x, y - this.y);
+        super.moveEntityTo(x, y);
+    }
+
+    @Override
+    public void moveEntity(int dx, int dy) {
+        polygon.translate(dx, dy);
+        super.moveEntity(dx, dy);
+    }
+
+    @Override
     public void update(Graphics g) {
         g.drawPolygon(polygon);
     }

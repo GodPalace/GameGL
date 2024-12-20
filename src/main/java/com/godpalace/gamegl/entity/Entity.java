@@ -19,10 +19,10 @@ public abstract class Entity {
     protected NamePosition namePosition;
     protected boolean isShowName, isShowEntity;
 
-    protected ArrayList<EntityKeyboardLogic> keyboardLogics;
-    protected ArrayList<EntityMouseLogic> mouseLogics;
-    protected ArrayList<EntityLoopLogic> loopLogics;
-    protected ArrayList<EntityRadioLogic> radioLogics;
+    protected final ArrayList<EntityKeyboardLogic> keyboardLogics;
+    protected final ArrayList<EntityMouseLogic> mouseLogics;
+    protected final ArrayList<EntityLoopLogic> loopLogics;
+    protected final ArrayList<EntityRadioLogic> radioLogics;
 
     protected ConcurrentHashMap<String, EntityAttribute<?>> attributes;
 
