@@ -25,7 +25,8 @@ public class Physics {
     public static boolean TouchBottom(int range){
         for (Entity entitys : entities) {
             EntityPane.ContactSurface contactSurface = pane.getEntityHitContactSurface(entity, entitys, range);
-            if (contactSurface == EntityPane.ContactSurface.TOP || contactSurface == EntityPane.ContactSurface.TOP_LEFT || contactSurface == EntityPane.ContactSurface.TOP_RIGHT) {
+            if (contactSurface == EntityPane.ContactSurface.TOP || contactSurface == EntityPane.ContactSurface.TOP_LEFT || contactSurface == EntityPane.ContactSurface.TOP_RIGHT
+                    && entity.getEntityX() + entity.getEntityWidth() > entitys.getEntityX() && entity.getEntityX() < entitys.getEntityX() + entitys.getEntityWidth()) {
                 return true;
             }
         }
@@ -132,6 +133,16 @@ public class Physics {
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
+            } else {
+                for (Entity entitys : entities) {
+                    EntityPane.ContactSurface contactSurface = pane.getEntityHitContactSurface(entity, entitys, 10);
+                    if (contactSurface == EntityPane.ContactSurface.BOTTOM || contactSurface == EntityPane.ContactSurface.BOTTOM_LEFT || contactSurface == EntityPane.ContactSurface.BOTTOM_RIGHT
+                            && entity.getEntityX() + entity.getEntityWidth() > entitys.getEntityX() && entity.getEntityX() < entitys.getEntityX() + entitys.getEntityWidth()){
+                        if (entity.getEntityY() + entity.getEntityHeight() > entitys.getEntityY()){
+                            entity.moveEntityTo(entity.getEntityX(), entitys.getEntityY() - entity.getEntityHeight());
+                        }
+                    }
+                }
             }
         });
         
@@ -147,7 +158,8 @@ public class Physics {
                         int x = 0;
                         for (Entity entitys : entities) {
                             EntityPane.ContactSurface contactSurface = pane.getEntityHitContactSurface(entitys, entity, 3);
-                            if (contactSurface == EntityPane.ContactSurface.LEFT || contactSurface == EntityPane.ContactSurface.BOTTOM_LEFT || contactSurface == EntityPane.ContactSurface.TOP_LEFT) {
+                            if (contactSurface == EntityPane.ContactSurface.LEFT || contactSurface == EntityPane.ContactSurface.BOTTOM_LEFT || contactSurface == EntityPane.ContactSurface.TOP_LEFT
+                                && entity.getEntityX() + entity.getEntityWidth() > entitys.getEntityX() && entity.getEntityX() < entitys.getEntityX() + entitys.getEntityWidth()) {
                                 x = entitys.getEntityX() + entitys.getEntityWidth();
                                 isHit = true;
                                 break;
@@ -168,7 +180,8 @@ public class Physics {
                         int x = 0;
                         for (Entity entitys : entities) {
                             EntityPane.ContactSurface contactSurface = pane.getEntityHitContactSurface(entitys, entity, 3);
-                            if (contactSurface == EntityPane.ContactSurface.RIGHT || contactSurface == EntityPane.ContactSurface.BOTTOM_RIGHT || contactSurface == EntityPane.ContactSurface.TOP_RIGHT) {
+                            if (contactSurface == EntityPane.ContactSurface.RIGHT || contactSurface == EntityPane.ContactSurface.BOTTOM_RIGHT || contactSurface == EntityPane.ContactSurface.TOP_RIGHT
+                                && entity.getEntityX() + entity.getEntityWidth() > entitys.getEntityX() && entity.getEntityX() < entitys.getEntityX() + entitys.getEntityWidth()) {
                                 x = entitys.getEntityX();
                                 isHit = true;
                                 break;
