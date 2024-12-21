@@ -2,20 +2,19 @@ package com.godpalace.gamegl.entity;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.awt.image.BufferedImage;
+import java.io.*;
 import java.net.URL;
 
 public class ImageEntity extends Entity {
-    protected Image image;
+    protected BufferedImage image;
 
-    public ImageEntity(Image image, int id) {
+    public ImageEntity(BufferedImage image, int id) {
         this(image, "ImageEntity", id, 0, 0,
                 image.getWidth(null), image.getHeight(null));
     }
 
-    public ImageEntity(Image image, String name, int id, int x, int y, int width, int height) {
+    public ImageEntity(BufferedImage image, String name, int id, int x, int y, int width, int height) {
         super(name, id, x, y, width, height);
 
         this.image = image;
@@ -51,7 +50,7 @@ public class ImageEntity extends Entity {
         }
     }
 
-    public void setImage(Image image) {
+    public void setImage(BufferedImage image) {
         this.image = image;
     }
 

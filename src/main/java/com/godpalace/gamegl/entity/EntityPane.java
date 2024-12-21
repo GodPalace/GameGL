@@ -45,7 +45,7 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
         this.addMouseListener(this);
     }
 
-    public int randomId() {
+    public synchronized final int randomId() {
         int id;
 
         do {

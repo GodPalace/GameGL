@@ -1,8 +1,12 @@
 package com.godpalace.gamegl.entity;
 
 import java.awt.*;
+import java.io.Serial;
 
 public class RoundRectEntity extends Entity {
+    @Serial
+    private static final long serialVersionUID = 3330000000000000004L;
+
     protected boolean isFill;
     protected int radius;
 

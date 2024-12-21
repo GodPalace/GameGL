@@ -11,6 +11,7 @@ import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.KeyEvent;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.Random;
@@ -52,7 +53,7 @@ public class PlaneWars {
             }
         });
 
-        Image img = ImageIO.read(PlaneWars.class.getResource("/test.png"));
+        BufferedImage img = ImageIO.read(PlaneWars.class.getResource("/test.png"));
         entity = new ImageEntity(img, "Plane", pane.randomId(), 0, 0, 30, 30);
         entity.setEntityAttribute("Score", score);
 

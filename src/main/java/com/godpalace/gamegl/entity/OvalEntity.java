@@ -1,8 +1,12 @@
 package com.godpalace.gamegl.entity;
 
 import java.awt.*;
+import java.io.Serial;
 
 public class OvalEntity extends Entity {
+    @Serial
+    private static final long serialVersionUID = 3330000000000000001L;
+
     protected boolean isFill;
 
     public OvalEntity(int id, int width, int height) {

@@ -8,10 +8,15 @@ import com.godpalace.gamegl.entity.logic.EntityRadioLogic;
 
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 
-public abstract class Entity {
+public abstract class Entity implements Serializable {
+    @Serial
+    private static final long serialVersionUID = 3330000000000000000L;
+
     protected int x, y, width, height, id, nameSpacing;
     protected String name;
     protected Color nameColor, color;
@@ -287,7 +292,7 @@ public abstract class Entity {
         return obj instanceof Entity && ((Entity) obj).getId() == this.getId();
     }
 
-    public enum NamePosition {
+    public enum NamePosition implements Serializable {
         TOP, BOTTOM, LEFT, RIGHT
     }
 }

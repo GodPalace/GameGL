@@ -1,9 +1,13 @@
 package com.godpalace.gamegl.network.client;
 
 import java.io.IOException;
+import java.io.Serial;
 import java.io.Serializable;
 
 public final class SyncObject<T extends Serializable> implements Serializable {
+    @Serial
+    private static final long serialVersionUID = 3340000000000000000L;
+
     private T object;
     private SyncClient syncClient;
 

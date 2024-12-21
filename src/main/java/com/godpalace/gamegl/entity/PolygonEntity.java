@@ -1,8 +1,12 @@
 package com.godpalace.gamegl.entity;
 
 import java.awt.*;
+import java.io.Serial;
 
 public class PolygonEntity extends Entity {
+    @Serial
+    private static final long serialVersionUID = 3330000000000000002L;
+
     protected Polygon polygon;
 
     public PolygonEntity(Polygon polygon, int id, int x, int y) {
