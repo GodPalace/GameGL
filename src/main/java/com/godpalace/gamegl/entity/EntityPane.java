@@ -14,10 +14,7 @@ import java.awt.event.MouseListener;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Random;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.*;
 
 // 注意: 继承EntityPane类并重写paintComponent方法时, 必须调用super.paintComponent(g)方法
 public class EntityPane extends JPanel implements KeyListener, MouseListener {
@@ -26,7 +23,7 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
     private final ConcurrentSkipListMap<Integer, CopyOnWriteArrayList<Entity>> entities;
     private final ConcurrentHashMap<Integer, Integer> idToLayers;
 
-    private final ConcurrentSkipListSet<Integer> isKeyPressed;
+    private final CopyOnWriteArraySet<Integer> isKeyPressed;
 
     private Color backgroundColor;
 
@@ -35,7 +32,7 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
         idToLayers = new ConcurrentHashMap<>();
         backgroundColor = null;
 
-        isKeyPressed = new ConcurrentSkipListSet<>();
+        isKeyPressed = new CopyOnWriteArraySet<>();
 
         new Thread(new LoopThread()).start();
         new Thread(new KeyEventThread()).start();
