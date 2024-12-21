@@ -17,6 +17,7 @@ import java.util.LinkedList;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class PlaneWars {
     public static Font font = new Font("Arial", Font.PLAIN, 16);
@@ -31,6 +32,9 @@ public class PlaneWars {
             g.drawString("Score: " + getValue(), 10, 20);
         }
     };
+
+    public static boolean isSuper = false;
+    public static AtomicInteger time = new AtomicInteger(8);
 
     public static final LinkedList<Entity> entities = new LinkedList<>();
 
@@ -73,27 +77,27 @@ public class PlaneWars {
                     }
                 }
             }
-        });
-        entity.addEntityKeyboardLogic(new EntityKeyboardLogicAdapter() {
+
             @Override
             public void onKeyDown(int key) {
                 if (key == KeyEvent.VK_SPACE) {
-                    Entity e = new RectEntity("Cannonball", pane.randomId(),
+                    RectEntity e = new RectEntity("Cannonball", pane.randomId(),
                             entity.getEntityX() + entity.getEntityWidth() / 2 - 4,
-                            entity.getEntityY(), 4, 8);
+                            entity.getEntityY(), (isSuper ? 6 : 2), 10);
 
+                    e.setFill(isSuper);
                     e.setEntityColor(Color.RED);
                     e.addEntityLoopLogic(runDelay -> {
-                        e.moveEntity(0, -8);
+                        e.moveEntity(0, -10 * (isSuper ? 2 : 1));
 
-                        if (e.getEntityY() < -8) {
+                        if (e.getEntityY() < -10) {
                             pane.removeEntity(e);
                             entities.remove(e);
                         }
                     });
 
                     entities.add(e);
-                    pane.addEntity(e);
+                    pane.addEntity(e, 1);
                 }
             }
         });
@@ -140,8 +144,63 @@ public class PlaneWars {
             }
         }, 3000, 800);
 
+        TimerTask task = new TimerTask() {
+            @Override
+            public void run() {
+                try {
+                    while (time.get() > 0) {
+                        synchronized (this) {
+                            wait(1000);
+                        }
+
+                        time.set(time.get() - 1);
+                    }
+
+                    isSuper = false;
+                    time.set(8);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        };
+
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                int x = rand.nextInt(frame.getWidth() - entity.getEntityWidth());
+
+                RectEntity e = new RectEntity("Super", pane.randomId(),
+                        x, -128, 64, 64);
+                e.setEntityColor(Color.GREEN);
+                e.setFill(true);
+
+                e.addEntityLoopLogic(runDelay -> {
+                    e.moveEntity(0, 1);
+
+                    if (pane.isEntityHit(e, entity)) {
+                        pane.removeEntity(e);
+
+                        if (isSuper) {
+                            time.set(8);
+                        } else {
+                            timer.schedule(task, 0);
+                        }
+
+                        isSuper = true;
+                        return;
+                    }
+
+                    if (e.getEntityY() > frame.getHeight()) {
+                        pane.removeEntity(e);
+                    }
+                });
+
+                pane.addEntity(e);
+            }
+        }, 10000, 2000);
+
         pane.setBackground(Color.LIGHT_GRAY);
-        pane.addEntity(entity);
+        pane.addEntity(entity, 2);
         frame.setVisible(true);
     }
 }

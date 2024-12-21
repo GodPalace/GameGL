@@ -68,11 +68,11 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
         return idToLayers.get(id);
     }
 
-    public final void addEntity(Entity entity) {
+    public synchronized final void addEntity(Entity entity) {
         this.addEntity(entity, 0);
     }
 
-    public final void addEntity(Entity entity, int layer) {
+    public synchronized final void addEntity(Entity entity, int layer) {
         if (idToLayers.containsKey(entity.getId()))
             throw new IllegalArgumentException("Entity with id " + entity.getId() +
                     " already exists in this pane.");
@@ -90,11 +90,11 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
         }
     }
 
-    public final void removeEntity(Entity entity) {
+    public synchronized final void removeEntity(Entity entity) {
         removeEntity(entity.getId());
     }
 
-    public final void removeEntity(int id) {
+    public synchronized final void removeEntity(int id) {
         int layer = idToLayers.get(id);
 
         entities.get(layer).removeIf(entity -> entity.getId() == id);
@@ -107,17 +107,17 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
         repaint();
     }
 
-    public final void removeAllEntities() {
+    public synchronized final void removeAllEntities() {
         entities.clear();
         idToLayers.clear();
         repaint();
     }
 
-    public boolean isEntityInPane(int id) {
+    public synchronized final boolean isEntityInPane(int id) {
         return entities.containsKey(id);
     }
 
-    public final Entity getEntity(int id) {
+    public synchronized final Entity getEntity(int id) {
         if (!idToLayers.containsKey(id))
             throw new IllegalArgumentException(
                     "Entity with id " + id + " does not exist in this pane.");
@@ -131,7 +131,7 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
         return null;
     }
 
-    public final boolean hasEntities() {
+    public synchronized final boolean hasEntities() {
         return !idToLayers.isEmpty();
     }
 
