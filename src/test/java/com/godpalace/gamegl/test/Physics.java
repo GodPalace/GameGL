@@ -71,7 +71,7 @@ public class Physics {
                 throw new RuntimeException(e);
             }
             isJump = false;
-        }//
+        }///
     }
     
     public static boolean isInAir(){
