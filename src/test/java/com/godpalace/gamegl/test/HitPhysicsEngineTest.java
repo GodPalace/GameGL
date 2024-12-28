@@ -4,33 +4,37 @@ import com.godpalace.gamegl.entity.Entity;
 import com.godpalace.gamegl.entity.EntityPane;
 import com.godpalace.gamegl.entity.ImageEntity;
 import com.godpalace.gamegl.entity.RectEntity;
-import com.godpalace.gamegl.entity.logic.EntityKeyboardLogic;
 import com.godpalace.gamegl.entity.logic.EntityKeyboardLogicAdapter;
-import com.godpalace.gamegl.entity.logic.EntityMouseLogic;
-import com.godpalace.gamegl.entity.logic.EntityMouseLogicAdapter;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
-import java.util.LinkedList;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
 import java.util.Random;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
 
-public class Physics {
+public class HitPhysicsEngineTest {
     public static EntityPane pane = new EntityPane();
     public static ImageEntity entity;
-    public static final LinkedList<Entity> entities = new LinkedList<>();
+    public static final CopyOnWriteArrayList<Entity> entities = new CopyOnWriteArrayList<>();
     public static boolean isJump = false;
     public static Color color;
     public static int speed = 3;
 
     public static boolean TouchTop(int range){
-        for (Entity entitys : entities) {
-            EntityPane.ContactSurface contactSurface = pane.getEntityHitContactSurface(entity, entitys, range);
+        for (Entity entity : entities) {
+            EntityPane.ContactSurface contactSurface = pane.getEntityHitContactSurface(HitPhysicsEngineTest.entity, entity, range);
             if (contactSurface == EntityPane.ContactSurface.TOP || contactSurface == EntityPane.ContactSurface.TOP_LEFT || contactSurface == EntityPane.ContactSurface.TOP_RIGHT
-                    && entity.getEntityX() + entity.getEntityWidth() > entitys.getEntityX() && entity.getEntityX() < entitys.getEntityX() + entitys.getEntityWidth()) {
+                    && HitPhysicsEngineTest.entity.getEntityX() + HitPhysicsEngineTest.entity.getEntityWidth() > entity.getEntityX() && HitPhysicsEngineTest.entity.getEntityX() < entity.getEntityX() + entity.getEntityWidth()) {
                 return true;
             }
         }
+
         return false;
     }
 
@@ -71,7 +75,7 @@ public class Physics {
                 throw new RuntimeException(e);
             }
             isJump = false;
-        }///
+        }
     }
     
     public static boolean isInAir(){
@@ -87,22 +91,73 @@ public class Physics {
         }
         return edge != EntityPane.Edge.BOTTOM_RIGHT && edge!= EntityPane.Edge.BOTTOM && edge!= EntityPane.Edge.BOTTOM_LEFT && !isHit;
     }
-    
-    public static void main(String[] args) {
+
+    static AtomicInteger x = new AtomicInteger(0);
+    static AtomicInteger y = new AtomicInteger(0);
+    static boolean isPutting = false;
+
+    public static void main(String[] args) throws Exception {
+        new Thread(() -> {
+            while (true) {
+                if (isPutting) {
+                    RectEntity rect = new RectEntity(
+                            "Rect", pane.randomId(), x.get(), y.get(), 30, 30);
+                    rect.setFill(true);
+                    rect.setEntityColor(color);
+                    entities.add(rect);
+                    pane.addEntity(rect);
+                } else {
+                    try {
+                        synchronized (x) {
+                            x.wait();
+                        }
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+
+                try {
+                    synchronized (y) {
+                        y.wait(10);
+                    }
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }).start();
 
         color = new Color(new Random().nextInt(256), new Random().nextInt(256), new Random().nextInt(256));
         pane.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                if(e.getButton() == MouseEvent.BUTTON1 ){
-                    RectEntity rect = new RectEntity("Rect", pane.randomId(), e.getX(), e.getY(), 30, 30);//
-                    rect.setFill(true);
-                    rect.setEntityColor(color);
-                    entities.add(rect);
-                    pane.addEntity(rect);
+                if (e.getButton() == MouseEvent.BUTTON1) {
+                    isPutting = true;
+
+                    try {
+                        synchronized (x) {
+                            x.notifyAll();
+                        }
+                    } catch (Exception e1) {
+                        throw new RuntimeException(e1);
+                    }
+                }
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (e.getButton() == MouseEvent.BUTTON1) {
+                    isPutting = false;
                 }
             }
         });
+        pane.addMouseMotionListener(new MouseAdapter() {
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                x.set(e.getX());
+                y.set(e.getY());
+            }
+        });
+
         pane.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
@@ -123,13 +178,15 @@ public class Physics {
             }
         });
 
-        JFrame frame = new JFrame("Physics");
+        JFrame frame = new JFrame("HitPhysicsEngineTest");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(800, 600);
-        frame.setLocation(400, 400);
+        frame.setLocationRelativeTo(null);
         frame.setContentPane(pane);
 
-        entity = new ImageEntity(Physics.class.getResource("/test.png"), "Test", 1,
+
+        BufferedImage image = ImageIO.read(HitPhysicsEngineTest.class.getResource("/test.png"));
+        entity = new ImageEntity(image, "Test", 1,
                 0, 0, 30, 30);
 
         new Thread(() -> {
@@ -218,13 +275,10 @@ public class Physics {
                             entity.moveEntityTo(x - entity.getEntityWidth(), entity.getEntityY());
                     }
 
-                    case KeyEvent.VK_SPACE -> new Thread(Physics::Jump).start();
-
+                    case KeyEvent.VK_SPACE -> new Thread(HitPhysicsEngineTest::Jump).start();
                 }
             }
-
         });
-
 
         pane.addEntity(entity);
         frame.setVisible(true);

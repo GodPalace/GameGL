@@ -149,10 +149,7 @@ public class PlaneWars {
             public void run() {
                 try {
                     while (time.get() > 0) {
-                        synchronized (this) {
-                            wait(1000);
-                        }
-
+                        Thread.sleep(1000);
                         time.set(time.get() - 1);
                     }
 

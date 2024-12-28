@@ -1,5 +1,6 @@
 package com.godpalace.gamegl.entity;
 
+import com.godpalace.gamegl.engine.EntityPhysicsEngine;
 import com.godpalace.gamegl.entity.attribute.EntityAttribute;
 import com.godpalace.gamegl.entity.logic.EntityKeyboardLogic;
 import com.godpalace.gamegl.entity.logic.EntityLoopLogic;
@@ -10,26 +11,29 @@ import java.awt.*;
 import java.awt.geom.Rectangle2D;
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public abstract class Entity implements Serializable {
     @Serial
     private static final long serialVersionUID = 3330000000000000000L;
+
+    private final Object physicsLock = new Object();
 
     protected int x, y, width, height, id, nameSpacing;
     protected String name;
     protected Color nameColor, color;
     protected Font nameFont;
     protected NamePosition namePosition;
-    protected boolean isShowName, isShowEntity;
+    protected boolean isShowName, isShowEntity, isEnabledPhysics;
 
-    protected final ArrayList<EntityKeyboardLogic> keyboardLogics;
-    protected final ArrayList<EntityMouseLogic> mouseLogics;
-    protected final ArrayList<EntityLoopLogic> loopLogics;
-    protected final ArrayList<EntityRadioLogic> radioLogics;
-
-    protected ConcurrentHashMap<String, EntityAttribute<?>> attributes;
+    protected final CopyOnWriteArrayList<EntityKeyboardLogic> keyboardLogics;
+    protected final CopyOnWriteArrayList<EntityMouseLogic> mouseLogics;
+    protected final CopyOnWriteArrayList<EntityLoopLogic> loopLogics;
+    protected final CopyOnWriteArrayList<EntityRadioLogic> radioLogics;
+    protected final CopyOnWriteArrayList<EntityPhysicsEngine> engines;
+    protected final ConcurrentHashMap<String, EntityAttribute<?>> attributes;
 
     public Entity(String name, int id, int x, int y, int width, int height) {
         this.name = name;
@@ -44,14 +48,71 @@ public abstract class Entity implements Serializable {
         this.height = height;
         this.isShowName = false;
         this.isShowEntity = true;
+        this.isEnabledPhysics = true;
         this.color = Color.BLACK;
 
-        this.keyboardLogics = new ArrayList<>();
-        this.mouseLogics = new ArrayList<>();
-        this.loopLogics = new ArrayList<>();
-        this.radioLogics = new ArrayList<>();
+        this.keyboardLogics = new CopyOnWriteArrayList<>();
+        this.mouseLogics = new CopyOnWriteArrayList<>();
+        this.loopLogics = new CopyOnWriteArrayList<>();
+        this.radioLogics = new CopyOnWriteArrayList<>();
+        this.engines = new CopyOnWriteArrayList<>();
 
         this.attributes = new ConcurrentHashMap<>();
+
+        new Thread(this::updateEntityPhysics).start();
+    }
+
+    public void addEntityPhysicsEngine(EntityPhysicsEngine engine) {
+        boolean isEmpty = engines.isEmpty();
+        engines.add(engine);
+        engine.setEntity(this);
+
+        if (isEmpty) {
+            synchronized (physicsLock) {
+                physicsLock.notifyAll();
+            }
+        }
+    }
+
+    public void removeEntityPhysicsEngine(EntityPhysicsEngine engine) {
+        engines.remove(engine);
+    }
+
+    public void enablePhysics() {
+        isEnabledPhysics = true;
+    }
+
+    public void disablePhysics() {
+        isEnabledPhysics = false;
+
+        synchronized (physicsLock) {
+            physicsLock.notifyAll();
+        }
+    }
+
+    private void updateEntityPhysics() {
+        while (true) {
+            try {
+                if (engines.isEmpty() || !isEnabledPhysics) {
+                    synchronized (physicsLock) {
+                        physicsLock.wait();
+                    }
+                }
+
+                for (EntityPhysicsEngine engine : engines) {
+                    if (engine.isStarted()) {
+                        engine.update(System.currentTimeMillis() - engine.getStartTime());
+                    }
+                }
+
+                synchronized (this) {
+                    wait(10);
+                }
+            } catch (Exception e) {
+                System.err.println(Arrays.toString(e.getStackTrace()));
+                break;
+            }
+        }
     }
 
     public void setEntityColor(Color color) {

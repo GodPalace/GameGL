@@ -22,10 +22,11 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
 
     private final ConcurrentSkipListMap<Integer, CopyOnWriteArrayList<Entity>> entities;
     private final ConcurrentHashMap<Integer, Integer> idToLayers;
-
     private final CopyOnWriteArraySet<Integer> isKeyPressed;
 
     private Color backgroundColor;
+    private Image backgroundImage = null;
+    private boolean backgroundImageRepeat = false;
 
     public EntityPane() {
         entities = new ConcurrentSkipListMap<>(Comparator.comparingInt(o -> o));
@@ -242,16 +243,26 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
     @Override
     public void setBackground(Color bg) {
         this.backgroundColor = bg;
+        backgroundImageRepeat = false;
+        repaint();
+    }
+
+    public void setBackground(Image image) {
+        this.backgroundImage = image;
+        backgroundImageRepeat = true;
+        repaint();
     }
 
     @Override
     protected void paintComponent(Graphics g) {
         // 画背景色
-        if (backgroundColor == null) {
-            g.clearRect(0, 0, getWidth(), getHeight());
-        } else {
+        if (backgroundImageRepeat) {
+            g.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), null);
+        } else if (backgroundColor != null) {
             g.setColor(backgroundColor);
             g.fillRect(0, 0, getWidth(), getHeight());
+        } else {
+            g.clearRect(0, 0, getWidth(), getHeight());
         }
 
         // 画实体
@@ -386,6 +397,8 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
     }
 
     protected class LoopThread implements Runnable {
+        private final Object lock = new Object();
+
         @Override
         public void run() {
             while (true) {
@@ -403,8 +416,8 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
                             }
                         }
 
-                        synchronized (entities) {
-                            entities.wait(10);
+                        synchronized (lock) {
+                            lock.wait(10);
                         }
                     } else {
                         synchronized (entities) {
@@ -422,6 +435,8 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
     }
 
     protected class KeyEventThread implements Runnable {
+        private final Object lock = new Object();
+
         @Override
         public void run() {
             while (true) {
@@ -445,10 +460,11 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
 
                     repaint();
 
-                    synchronized (isKeyPressed) {
-                        isKeyPressed.wait(10);
+                    synchronized (lock) {
+                        lock.wait(10);
                     }
                 } catch (Exception e) {
+                    System.err.println(Arrays.toString(e.getStackTrace()));
                     break;
                 }
             }
