@@ -15,6 +15,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -26,23 +27,15 @@ public class HitPhysicsEngineTest {
     public static Color color;
     public static int speed = 3;
 
-    public static boolean TouchTop(int range){
-        for (Entity entity : entities) {
-            EntityPane.ContactSurface contactSurface = pane.getEntityHitContactSurface(HitPhysicsEngineTest.entity, entity, range);
-            if (contactSurface == EntityPane.ContactSurface.TOP || contactSurface == EntityPane.ContactSurface.TOP_LEFT || contactSurface == EntityPane.ContactSurface.TOP_RIGHT
-                    && HitPhysicsEngineTest.entity.getEntityX() + HitPhysicsEngineTest.entity.getEntityWidth() > entity.getEntityX() && HitPhysicsEngineTest.entity.getEntityX() < entity.getEntityX() + entity.getEntityWidth()) {
-                return true;
-            }
-        }
 
-        return false;
-    }
+    public static ConcurrentHashMap<Integer, int[]> location = new ConcurrentHashMap<>();
+    public static ConcurrentHashMap<Integer, Boolean> notHit = new ConcurrentHashMap<>();
 
     public static void Jump(){
-        if (!isJump && !isInAir()) {
+        if (!isJump ) {
             isJump = true;
             for (int i = 0; i < 10; i++) {
-                if (TouchTop(5)) break;
+                if(entity.isHitFace()) break;
                 entity.moveEntity(0, -5);
                 try {
                     Thread.sleep(6);
@@ -52,7 +45,7 @@ public class HitPhysicsEngineTest {
             }
 
             for (int i = 0; i < 10; i++) {
-                if (TouchTop(3)) break;
+                if(entity.isHitFace()) break;
                 entity.moveEntity(0, -3);
                 try {
                     Thread.sleep(7);
@@ -61,7 +54,7 @@ public class HitPhysicsEngineTest {
                 }
             }
             for (int i = 0; i < 10; i++) {
-                if (TouchTop(3)) break;
+                if(entity.isHitFace()) break;
                 entity.moveEntity(0, 3);
                 try {
                     Thread.sleep(7);
@@ -77,26 +70,14 @@ public class HitPhysicsEngineTest {
             isJump = false;
         }
     }
-    
-    public static boolean isInAir(){
-        EntityPane.Edge edge = pane.getEntityHitEdge(entity);
-        boolean isHit = false;
-        for (Entity entitys : entities) {
-            EntityPane.ContactSurface contactSurface = pane.getEntityHitContactSurface(entity, entitys, 10);
-            if (contactSurface == EntityPane.ContactSurface.BOTTOM || contactSurface == EntityPane.ContactSurface.BOTTOM_LEFT || contactSurface == EntityPane.ContactSurface.BOTTOM_RIGHT
-                    && entity.getEntityX() + entity.getEntityWidth() > entitys.getEntityX() && entity.getEntityX() < entitys.getEntityX() + entitys.getEntityWidth()) {
-                isHit = true;
-                break;
-            }
-        }
-        return edge != EntityPane.Edge.BOTTOM_RIGHT && edge!= EntityPane.Edge.BOTTOM && edge!= EntityPane.Edge.BOTTOM_LEFT && !isHit;
-    }
 
     static AtomicInteger x = new AtomicInteger(0);
     static AtomicInteger y = new AtomicInteger(0);
     static boolean isPutting = false;
 
     public static void main(String[] args) throws Exception {
+
+
         new Thread(() -> {
             while (true) {
                 if (isPutting) {
@@ -205,23 +186,13 @@ public class HitPhysicsEngineTest {
                 entity.setEntityY(pane.getHeight() - entity.getEntityHeight());
             }
 
-            if (isInAir() && !isJump) {
+            if ( !isJump) {
 
                 entity.moveEntity(0, 10);
                 try {
                     Thread.sleep(1);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
-                }
-            } else {
-                for (Entity entitys : entities) {
-                    EntityPane.ContactSurface contactSurface = pane.getEntityHitContactSurface(entity, entitys, 10);
-                    if (contactSurface == EntityPane.ContactSurface.BOTTOM || contactSurface == EntityPane.ContactSurface.BOTTOM_LEFT || contactSurface == EntityPane.ContactSurface.BOTTOM_RIGHT
-                            && entity.getEntityX() + entity.getEntityWidth() > entitys.getEntityX() && entity.getEntityX() < entitys.getEntityX() + entitys.getEntityWidth()){
-                        if (entity.getEntityY() + entity.getEntityHeight() > entitys.getEntityY()){
-                            entity.moveEntityTo(entity.getEntityX(), entitys.getEntityY() - entity.getEntityHeight());
-                        }
-                    }
                 }
             }
         });
@@ -232,47 +203,11 @@ public class HitPhysicsEngineTest {
             public void onKeyDowning(int key) {
                 switch (key){
                     case KeyEvent.VK_A -> {
-                        EntityPane.Edge edge = pane.getEntityHitEdge(entity);
-
-                        boolean isHit = false;
-                        int x = 0;
-                        for (Entity entitys : entities) {
-                            EntityPane.ContactSurface contactSurface = pane.getEntityHitContactSurface(entitys, entity, speed);
-                            if (contactSurface == EntityPane.ContactSurface.LEFT || contactSurface == EntityPane.ContactSurface.BOTTOM_LEFT || contactSurface == EntityPane.ContactSurface.TOP_LEFT
-                                && entity.getEntityY() - entity.getEntityHeight() < entitys.getEntityY() && entity.getEntityY() > entitys.getEntityY() + entitys.getEntityHeight()) {
-                                x = entitys.getEntityX() + entitys.getEntityWidth();
-                                isHit = true;
-                                break;
-                            }
-                        }
-                        if(edge != EntityPane.Edge.LEFT && edge != EntityPane.Edge.BOTTOM_LEFT && edge != EntityPane.Edge.TOP_LEFT && !isHit)
-                            entity.moveEntity(-speed, 0);
-                        if(edge == EntityPane.Edge.LEFT || edge == EntityPane.Edge.BOTTOM_LEFT || edge == EntityPane.Edge.TOP_LEFT)
-                            entity.moveEntityTo(0, entity.getEntityY());
-                        if (isHit)
-                            entity.moveEntityTo(x, entity.getEntityY());
+                         entity.moveEntity(-speed, 0);
                     }
                     
                     case KeyEvent.VK_D -> {
-                        EntityPane.Edge edge = pane.getEntityHitEdge(entity);
-
-                        boolean isHit = false;
-                        int x = 0;
-                        for (Entity entitys : entities) {
-                            EntityPane.ContactSurface contactSurface = pane.getEntityHitContactSurface(entitys, entity, speed);
-                            if (contactSurface == EntityPane.ContactSurface.RIGHT || contactSurface == EntityPane.ContactSurface.BOTTOM_RIGHT || contactSurface == EntityPane.ContactSurface.TOP_RIGHT
-                                && entity.getEntityY() - entity.getEntityHeight() < entitys.getEntityY() && entity.getEntityY() > entitys.getEntityY() + entitys.getEntityHeight()) {
-                                x = entitys.getEntityX();
-                                isHit = true;
-                                break;
-                            }
-                        }
-                        if(edge != EntityPane.Edge.RIGHT && edge != EntityPane.Edge.BOTTOM_RIGHT && edge != EntityPane.Edge.TOP_RIGHT && !isHit)
-                            entity.moveEntity(speed, 0);
-                        if(edge == EntityPane.Edge.RIGHT || edge == EntityPane.Edge.BOTTOM_RIGHT || edge == EntityPane.Edge.TOP_RIGHT)
-                            entity.moveEntityTo(pane.getWidth() - entity.getEntityWidth(), entity.getEntityY());
-                        if (isHit)
-                            entity.moveEntityTo(x - entity.getEntityWidth(), entity.getEntityY());
+                        entity.moveEntity(speed, 0);
                     }
 
                     case KeyEvent.VK_SPACE -> new Thread(HitPhysicsEngineTest::Jump).start();
@@ -281,6 +216,11 @@ public class HitPhysicsEngineTest {
         });
 
         pane.addEntity(entity);
+        pane.startEntityHitDetect();
         frame.setVisible(true);
+
+       // new Thread(HitPhysicsEngineTest::EntityHit).start();
+
     }
+
 }

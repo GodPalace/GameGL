@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Random;
 import java.util.concurrent.*;
+import java.util.function.Consumer;
 
 // 注意: 继承EntityPane类并重写paintComponent方法时, 必须调用super.paintComponent(g)方法
 public class EntityPane extends JPanel implements KeyListener, MouseListener {
@@ -53,6 +54,14 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
         return id;
     }
 
+    public void forEach(Consumer<? super Entity> consumer) {
+        for (CopyOnWriteArrayList<Entity> layer : entities.values()) {
+            for (Entity entity : layer) {
+                consumer.accept(entity);
+            }
+        }
+    }
+
     public final int getLayerCount() {
         return entities.size();
     }
@@ -83,6 +92,7 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
 
         if (!entities.containsKey(layer))
             entities.put(layer, new CopyOnWriteArrayList<>());
+        entity.pane = this;
         entities.get(layer).add(entity);
         idToLayers.put(entity.getId(), layer);
 
@@ -99,6 +109,7 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
         int layer = idToLayers.get(id);
 
         entities.get(layer).removeIf(entity -> entity.getId() == id);
+        entities.get(layer).get(id).pane = null;
         idToLayers.remove(id);
 
         if (entities.get(layer).isEmpty()) {
@@ -238,6 +249,14 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
                 }
             }
         }
+    }
+
+    public void startEntityHitDetect(){
+        this.forEach(entity -> entity.setHitBoxEnabled(true));
+    }
+
+    public void stopEntityHitDetect(){
+        this.forEach(entity -> entity.setHitBoxEnabled(false));
     }
 
     @Override

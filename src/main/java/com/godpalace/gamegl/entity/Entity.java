@@ -14,6 +14,7 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public abstract class Entity implements Serializable {
     @Serial
@@ -21,13 +22,16 @@ public abstract class Entity implements Serializable {
 
     private final Object physicsLock = new Object();
 
+    public EntityPane pane;
+
     protected int x, y, width, height, id, nameSpacing;
     protected String name;
     protected Color nameColor, color;
     protected Font nameFont;
     protected NamePosition namePosition;
     protected boolean isShowName, isShowEntity, isEnabledPhysics;
-
+    protected boolean HitBoxEnabled = false;
+    
     protected final CopyOnWriteArrayList<EntityKeyboardLogic> keyboardLogics;
     protected final CopyOnWriteArrayList<EntityMouseLogic> mouseLogics;
     protected final CopyOnWriteArrayList<EntityLoopLogic> loopLogics;
@@ -114,6 +118,66 @@ public abstract class Entity implements Serializable {
             }
         }
     }
+    
+    public void setHitBoxEnabled(boolean b) {
+        this.HitBoxEnabled = b;
+    }
+
+    public boolean isHitBoxEnabled() {
+        return this.HitBoxEnabled;    
+    }
+
+    public boolean isHitFace(){
+        AtomicBoolean isHit = new AtomicBoolean(false);
+        pane.forEach(entitys -> {
+            EntityPane.ContactSurface contactSurface = pane.getEntityHitContactSurface(this, entitys, 1);
+            if (contactSurface!= EntityPane.ContactSurface.NONE && contactSurface!= EntityPane.ContactSurface.MIDDLE){
+                isHit.set(true);
+            }
+        });
+        return isHit.get();
+    }
+
+    public void EntityHitEvent(int dx, int dy){
+        pane.forEach(entitys -> {
+            if(this.getId() != entitys.getId()) {
+                EntityPane.ContactSurface contactSurface ;
+
+                if (dx > 0) {
+                    //System.out.println("Right:"+dx);
+                    contactSurface = pane.getEntityHitContactSurface(this, entitys, dx);
+                    if (contactSurface == EntityPane.ContactSurface.RIGHT || contactSurface == EntityPane.ContactSurface.BOTTOM_RIGHT || contactSurface == EntityPane.ContactSurface.TOP_RIGHT
+                            && this.getEntityY() - this.getEntityHeight() < entitys.getEntityY() && this.getEntityY() > entitys.getEntityY() + entitys.getEntityHeight()) {
+                        this.moveEntityTo(entitys.getEntityX() + entitys.getEntityWidth(), this.getEntityY());
+                    }
+                }
+                if (dx < 0) {
+                    //System.out.println("Left:"+(-dx));
+                    contactSurface = pane.getEntityHitContactSurface(this, entitys, -dx);
+                    if (contactSurface == EntityPane.ContactSurface.LEFT || contactSurface == EntityPane.ContactSurface.BOTTOM_LEFT || contactSurface == EntityPane.ContactSurface.TOP_LEFT
+                            && this.getEntityY() - this.getEntityHeight() < entitys.getEntityY() && this.getEntityY() > entitys.getEntityY() + entitys.getEntityHeight()) {
+                        this.moveEntityTo(entitys.getEntityX() - this.getEntityWidth(), this.getEntityY());
+                    }
+                }
+                if (dy > 0) {
+                    //System.out.println("Bottom:"+dy);
+                    contactSurface = pane.getEntityHitContactSurface(this, entitys, dy);
+                    if (contactSurface == EntityPane.ContactSurface.BOTTOM || contactSurface == EntityPane.ContactSurface.BOTTOM_LEFT || contactSurface == EntityPane.ContactSurface.BOTTOM_RIGHT
+                            && this.getEntityX() + this.getEntityWidth() > entitys.getEntityX() && this.getEntityX() < entitys.getEntityX() + entitys.getEntityWidth()) {
+                        this.moveEntityTo(this.getEntityX(), entitys.getEntityY() - this.getEntityHeight());
+                    }
+                }
+                if (dy < 0) {
+                    //System.out.println("Top:"+(-dy));
+                    contactSurface = pane.getEntityHitContactSurface(this, entitys, -dy);
+                    if (contactSurface == EntityPane.ContactSurface.TOP || contactSurface == EntityPane.ContactSurface.TOP_LEFT || contactSurface == EntityPane.ContactSurface.TOP_RIGHT
+                            && this.getEntityX() + this.getEntityWidth() > entitys.getEntityX() && this.getEntityX() < entitys.getEntityX() + entitys.getEntityWidth()) {
+                        this.moveEntityTo(this.getEntityX(), entitys.getEntityY() + entitys.getEntityHeight());
+                    }
+                }
+            }
+        });
+    }
 
     public void setEntityColor(Color color) {
         this.color = color;
@@ -124,10 +188,12 @@ public abstract class Entity implements Serializable {
     }
 
     public void setEntityX(int x) {
+        if (HitBoxEnabled) EntityHitEvent(x - this.x, 0);
         this.x = x;
     }
 
     public void setEntityY(int y) {
+        if (HitBoxEnabled) EntityHitEvent(0, y - this.y);
         this.y = y;
     }
 
