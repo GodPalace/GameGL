@@ -179,7 +179,7 @@ public class HitPhysicsEngineTest {
 
         new Thread(() -> {
             while (true) {
-                pane.repaint();////
+                pane.repaint();//
                 try {
                     Thread.sleep(10);
                 } catch (InterruptedException e) {
