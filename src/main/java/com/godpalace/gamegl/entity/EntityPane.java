@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Random;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 // 注意: 继承EntityPane类并重写paintComponent方法时, 必须调用super.paintComponent(g)方法
@@ -52,6 +53,16 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
         } while (idToLayers.containsKey(id));
 
         return id;
+    }
+
+    public void forEach(Consumer<? super Entity> consumer, AtomicBoolean Continue) {
+        for (CopyOnWriteArrayList<Entity> layer : entities.values()) {
+            if (!Continue.get()) break;
+            for (Entity entity : layer) {
+                if (!Continue.get()) break;
+                consumer.accept(entity);
+            }
+        }
     }
 
     public void forEach(Consumer<? super Entity> consumer) {

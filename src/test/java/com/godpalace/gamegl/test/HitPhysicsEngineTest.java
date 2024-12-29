@@ -17,6 +17,7 @@ import java.awt.image.BufferedImage;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class HitPhysicsEngineTest {
@@ -35,7 +36,6 @@ public class HitPhysicsEngineTest {
         if (!isJump ) {
             isJump = true;
             for (int i = 0; i < 10; i++) {
-                if(entity.isHitFace()) break;
                 entity.moveEntity(0, -5);
                 try {
                     Thread.sleep(6);
@@ -45,7 +45,6 @@ public class HitPhysicsEngineTest {
             }
 
             for (int i = 0; i < 10; i++) {
-                if(entity.isHitFace()) break;
                 entity.moveEntity(0, -3);
                 try {
                     Thread.sleep(7);
@@ -54,7 +53,6 @@ public class HitPhysicsEngineTest {
                 }
             }
             for (int i = 0; i < 10; i++) {
-                if(entity.isHitFace()) break;
                 entity.moveEntity(0, 3);
                 try {
                     Thread.sleep(7);
@@ -143,7 +141,6 @@ public class HitPhysicsEngineTest {
             @Override
             public void keyPressed(KeyEvent e) {
                 if(e.getKeyCode() == KeyEvent.VK_S){
-                   // System.out.println("Shift");
                     entity.setEntityHeight(25);
                     speed = 1;
                 }
@@ -152,7 +149,6 @@ public class HitPhysicsEngineTest {
             @Override
             public void keyReleased(KeyEvent e) {
                 if(e.getKeyCode() == KeyEvent.VK_S){
-                   // System.out.println("Shift");
                     entity.setEntityHeight(30);
                     speed = 3;
                 }

@@ -127,56 +127,54 @@ public abstract class Entity implements Serializable {
         return this.HitBoxEnabled;    
     }
 
-    public boolean isHitFace(){
-        AtomicBoolean isHit = new AtomicBoolean(false);
-        pane.forEach(entitys -> {
-            EntityPane.ContactSurface contactSurface = pane.getEntityHitContactSurface(this, entitys, 1);
-            if (contactSurface!= EntityPane.ContactSurface.NONE && contactSurface!= EntityPane.ContactSurface.MIDDLE){
-                isHit.set(true);
-            }
-        });
-        return isHit.get();
-    }
-
     public void EntityHitEvent(int dx, int dy){
-        pane.forEach(entitys -> {
-            if(this.getId() != entitys.getId()) {
-                EntityPane.ContactSurface contactSurface ;
-
+        AtomicBoolean Continue = new AtomicBoolean(true);
+        AtomicBoolean isHit = new AtomicBoolean(false);
+        pane.forEach(entities -> {
+            if(this.getId() != entities.getId()) {
+                EntityPane.ContactSurface contactSurface;
                 if (dx > 0) {
-                    //System.out.println("Right:"+dx);
-                    contactSurface = pane.getEntityHitContactSurface(this, entitys, dx);
+                    contactSurface = pane.getEntityHitContactSurface(entities, this, dx);
                     if (contactSurface == EntityPane.ContactSurface.RIGHT || contactSurface == EntityPane.ContactSurface.BOTTOM_RIGHT || contactSurface == EntityPane.ContactSurface.TOP_RIGHT
-                            && this.getEntityY() - this.getEntityHeight() < entitys.getEntityY() && this.getEntityY() > entitys.getEntityY() + entitys.getEntityHeight()) {
-                        this.moveEntityTo(entitys.getEntityX() + entitys.getEntityWidth(), this.getEntityY());
+                            && this.getEntityY() - this.getEntityHeight() < entities.getEntityY() && this.getEntityY() > entities.getEntityY() + entities.getEntityHeight()) {
+                        this.moveEntityTo(entities.getEntityX() - this.getEntityWidth(), this.getEntityY());
+                        isHit.set(true);
+                        Continue.set(false);
                     }
                 }
                 if (dx < 0) {
-                    //System.out.println("Left:"+(-dx));
-                    contactSurface = pane.getEntityHitContactSurface(this, entitys, -dx);
+                    contactSurface = pane.getEntityHitContactSurface(entities, this, -dx);
                     if (contactSurface == EntityPane.ContactSurface.LEFT || contactSurface == EntityPane.ContactSurface.BOTTOM_LEFT || contactSurface == EntityPane.ContactSurface.TOP_LEFT
-                            && this.getEntityY() - this.getEntityHeight() < entitys.getEntityY() && this.getEntityY() > entitys.getEntityY() + entitys.getEntityHeight()) {
-                        this.moveEntityTo(entitys.getEntityX() - this.getEntityWidth(), this.getEntityY());
+                            && this.getEntityY() - this.getEntityHeight() < entities.getEntityY() && this.getEntityY() > entities.getEntityY() + entities.getEntityHeight()) {
+                        this.moveEntityTo(entities.getEntityX() + entities.getEntityWidth(), this.getEntityY());
+                        isHit.set(true);
+                        Continue.set(false);
                     }
                 }
                 if (dy > 0) {
-                    //System.out.println("Bottom:"+dy);
-                    contactSurface = pane.getEntityHitContactSurface(this, entitys, dy);
+                    contactSurface = pane.getEntityHitContactSurface(this, entities, dy);
                     if (contactSurface == EntityPane.ContactSurface.BOTTOM || contactSurface == EntityPane.ContactSurface.BOTTOM_LEFT || contactSurface == EntityPane.ContactSurface.BOTTOM_RIGHT
-                            && this.getEntityX() + this.getEntityWidth() > entitys.getEntityX() && this.getEntityX() < entitys.getEntityX() + entitys.getEntityWidth()) {
-                        this.moveEntityTo(this.getEntityX(), entitys.getEntityY() - this.getEntityHeight());
+                            && this.getEntityX() + this.getEntityWidth() > entities.getEntityX() && this.getEntityX() < entities.getEntityX() + entities.getEntityWidth()) {
+                        this.moveEntityTo(this.getEntityX(), entities.getEntityY() - this.getEntityHeight());
+                        isHit.set(true);
+                        Continue.set(false);
                     }
                 }
                 if (dy < 0) {
-                    //System.out.println("Top:"+(-dy));
-                    contactSurface = pane.getEntityHitContactSurface(this, entitys, -dy);
+                    contactSurface = pane.getEntityHitContactSurface(this, entities, -dy);
                     if (contactSurface == EntityPane.ContactSurface.TOP || contactSurface == EntityPane.ContactSurface.TOP_LEFT || contactSurface == EntityPane.ContactSurface.TOP_RIGHT
-                            && this.getEntityX() + this.getEntityWidth() > entitys.getEntityX() && this.getEntityX() < entitys.getEntityX() + entitys.getEntityWidth()) {
-                        this.moveEntityTo(this.getEntityX(), entitys.getEntityY() + entitys.getEntityHeight());
+                            && this.getEntityX() + this.getEntityWidth() > entities.getEntityX() && this.getEntityX() < entities.getEntityX() + entities.getEntityWidth()) {
+                        this.moveEntityTo(this.getEntityX(), entities.getEntityY() + entities.getEntityHeight());
+                        isHit.set(true);
+                        Continue.set(false);
                     }
                 }
             }
-        });
+        }, Continue);
+        if(!isHit.get()){
+            this.setEntityX(this.getEntityX() + dx);
+            this.setEntityY(this.getEntityY() + dy);
+        }
     }
 
     public void setEntityColor(Color color) {
@@ -188,12 +186,10 @@ public abstract class Entity implements Serializable {
     }
 
     public void setEntityX(int x) {
-        if (HitBoxEnabled) EntityHitEvent(x - this.x, 0);
         this.x = x;
     }
 
     public void setEntityY(int y) {
-        if (HitBoxEnabled) EntityHitEvent(0, y - this.y);
         this.y = y;
     }
 
@@ -333,8 +329,12 @@ public abstract class Entity implements Serializable {
     }
 
     public void moveEntity(int dx, int dy) {
-        this.setEntityX(this.getEntityX() + dx);
-        this.setEntityY(this.getEntityY() + dy);
+        if (HitBoxEnabled) {
+            EntityHitEvent(dx, dy);
+        } else {
+            this.setEntityX(this.getEntityX() + dx);
+            this.setEntityY(this.getEntityY() + dy);
+        }
     }
 
     public void moveEntityTo(int x, int y) {
