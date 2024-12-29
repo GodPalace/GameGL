@@ -15,7 +15,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.util.Random;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -28,12 +27,23 @@ public class HitPhysicsEngineTest {
     public static Color color;
     public static int speed = 3;
 
-
-    public static ConcurrentHashMap<Integer, int[]> location = new ConcurrentHashMap<>();
-    public static ConcurrentHashMap<Integer, Boolean> notHit = new ConcurrentHashMap<>();
+    public static boolean isInAir(){
+        AtomicBoolean isInAir = new AtomicBoolean(true);
+        AtomicBoolean Continue = new AtomicBoolean(true);
+        pane.forEach(entity -> {
+            if(HitPhysicsEngineTest.entity.getId() != entity.getId()){
+                if (pane.isEntityHit(HitPhysicsEngineTest.entity, entity)
+                        || pane.getEntityHitEdge(HitPhysicsEngineTest.entity)==EntityPane.Edge.BOTTOM){
+                    isInAir.set(false);
+                    Continue.set(false);
+                }
+            }
+        }, Continue);
+        return isInAir.get();
+    }
 
     public static void Jump(){
-        if (!isJump ) {
+        if (!isJump && !isInAir()) {
             isJump = true;
             for (int i = 0; i < 10; i++) {
                 entity.moveEntity(0, -5);
@@ -83,6 +93,7 @@ public class HitPhysicsEngineTest {
                             "Rect", pane.randomId(), x.get(), y.get(), 30, 30);
                     rect.setFill(true);
                     rect.setEntityColor(color);
+                    System.out.println("\rEntity Number: " + entities.size());
                     entities.add(rect);
                     pane.addEntity(rect);
                 } else {
@@ -182,8 +193,8 @@ public class HitPhysicsEngineTest {
                 entity.setEntityY(pane.getHeight() - entity.getEntityHeight());
             }
 
-            if ( !isJump) {
-
+            EntityPane.Edge edge = pane.getEntityHitEdge(entity);
+            if (!isJump && edge!=EntityPane.Edge.BOTTOM && edge!=EntityPane.Edge.BOTTOM_LEFT && edge!=EntityPane.Edge.BOTTOM_RIGHT) {
                 entity.moveEntity(0, 10);
                 try {
                     Thread.sleep(1);
@@ -191,6 +202,8 @@ public class HitPhysicsEngineTest {
                     throw new RuntimeException(e);
                 }
             }
+            if (edge == EntityPane.Edge.BOTTOM || edge == EntityPane.Edge.BOTTOM_LEFT || edge == EntityPane.Edge.BOTTOM_RIGHT)
+                entity.setEntityY(pane.getHeight() - entity.getEntityHeight());
         });
         
         entity.addEntityKeyboardLogic(new EntityKeyboardLogicAdapter() {
@@ -198,15 +211,31 @@ public class HitPhysicsEngineTest {
             @Override
             public void onKeyDowning(int key) {
                 switch (key){
-                    case KeyEvent.VK_A -> {
-                         entity.moveEntity(-speed, 0);
-                    }
+                    case KeyEvent.VK_A -> entity.moveEntity(-speed, 0);
                     
-                    case KeyEvent.VK_D -> {
-                        entity.moveEntity(speed, 0);
-                    }
+                    case KeyEvent.VK_D -> entity.moveEntity(speed, 0);
 
                     case KeyEvent.VK_SPACE -> new Thread(HitPhysicsEngineTest::Jump).start();
+                }
+            }
+
+            @Override
+            public void onKeyDown(int key) {
+                switch (key){
+                    case KeyEvent.VK_UP -> {
+                        speed++;
+                        System.out.println("Speed: " + speed);
+                    }
+
+                    case KeyEvent.VK_DOWN -> {
+                        speed--;
+                        System.out.println("Speed: " + speed);
+                    }
+
+                    case KeyEvent.VK_O -> {
+                        entity.setHitBoxEnabled(!entity.isHitBoxEnabled());
+                        System.out.println("HitBox: " + entity.isHitBoxEnabled());
+                    }
                 }
             }
         });
@@ -214,9 +243,5 @@ public class HitPhysicsEngineTest {
         pane.addEntity(entity);
         pane.startEntityHitDetect();
         frame.setVisible(true);
-
-       // new Thread(HitPhysicsEngineTest::EntityHit).start();
-
     }
-
 }
