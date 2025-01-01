@@ -22,7 +22,7 @@ public abstract class Entity implements Serializable {
 
     private final Object physicsLock = new Object();
 
-    public EntityPane pane;
+    protected EntityPane pane;
 
     protected int x, y, width, height, id, nameSpacing;
     protected String name;
