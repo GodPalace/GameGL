@@ -53,7 +53,7 @@ public class MapEntityPane extends EntityPane {
                 MainEntity.setEntityY(TureOriginPointY + range);
                 moveMap(0, -dy);
             }
-            try {
+            try {//
                 Thread.sleep(1);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
