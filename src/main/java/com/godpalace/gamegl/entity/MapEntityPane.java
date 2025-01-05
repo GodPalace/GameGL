@@ -2,7 +2,7 @@ package com.godpalace.gamegl.entity;
 
 
 import java.awt.*;
-////
+
 public class MapEntityPane extends EntityPane {
     private Entity MainEntity;
     private int TureOriginPointX, TureOriginPointY;
@@ -30,7 +30,6 @@ public class MapEntityPane extends EntityPane {
     private final Thread EntityThread = new Thread(()->{
         while(true){
             if(MainEntity == null) continue;
-            //System.out.println(TureOriginPointX + " " + TureOriginPointY + "\n" + MainEntity.getEntityX() + " " + MainEntity.getEntityY());
             int x = MainEntity.getEntityX() - TureOriginPointX;
             int y = MainEntity.getEntityY() - TureOriginPointY;
             if(Math.abs(x) > range && x < 0){
@@ -53,7 +52,7 @@ public class MapEntityPane extends EntityPane {
                 MainEntity.setEntityY(TureOriginPointY + range);
                 moveMap(0, -dy);
             }
-            try {//
+            try {
                 Thread.sleep(1);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
@@ -71,7 +70,10 @@ public class MapEntityPane extends EntityPane {
     public void moveMap(int dx, int dy) {
         originPointX -= dx;
         originPointY -= dy;
-        this.forEach(entity -> entity.moveEntity(dx, dy));
+        this.forEach(entity -> {
+            if(entity.getId() != MainEntity.getId())
+                entity.moveEntity(dx, dy);
+        });
         repaint();
     }
 
