@@ -154,7 +154,7 @@ public class MapTest {
         pane.addEntity(entity);
         pane.setOriginLocationType(MapEntityPane.originLocationType.MIDDLE);
         pane.setRange(60);
-        pane.setMainEntity(entity);///
+        pane.setMainEntity(entity);//
         pane.startEntityHitDetect();
     }
 }
