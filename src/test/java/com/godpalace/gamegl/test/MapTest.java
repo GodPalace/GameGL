@@ -17,8 +17,17 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class MapTest {
-    public static MapEntityPane pane;
+    public static MapEntityPane pane = new MapEntityPane();
     public static ImageEntity entity;
+    public static Entity loc = new Entity("Location", 666, 0, 0, 1, 1) {
+        @Override
+        public void update(Graphics g) {
+            int x = MapTest.pane.getEntityX(entity);
+            int y = MapTest.pane.getEntityY(entity);
+            g.setFont(new Font("Arial", Font.PLAIN, 25));
+            g.drawString("X:"+x+" Y:"+y, 20, 20);
+        }
+    };
     public static final CopyOnWriteArrayList<Entity> entities = new CopyOnWriteArrayList<>();
     public static Color color;
     public static int speed = 3;
@@ -28,7 +37,6 @@ public class MapTest {
     static boolean isPutting = false;
 
     public static void main(String[] args) throws Exception {
-        pane = new MapEntityPane();
         new Thread(() -> {
             while (true) {
                 if (isPutting) {
@@ -102,10 +110,10 @@ public class MapTest {
         BufferedImage image = ImageIO.read(HitPhysicsEngineTest.class.getResource("/test.png"));
         entity = new ImageEntity(image, "Test", 1,
                 0, 0, 30, 30);
-
+        loc.setEntityColor(Color.BLACK);
         new Thread(() -> {
             while (true) {
-                pane.repaint();//
+                pane.repaint();
                 try {
                     Thread.sleep(10);
                 } catch (InterruptedException e) {
@@ -152,9 +160,10 @@ public class MapTest {
 
         frame.setVisible(true);
         pane.addEntity(entity);
-        pane.setOriginLocationType(MapEntityPane.originLocationType.MIDDLE);
-        pane.setRange(60);
-        pane.setMainEntity(entity);
+        pane.addEntity(loc, 2);
+        pane.addNotMoveEntity(loc);
+        pane.setBorder(-500, -500, 500, 500);
+        pane.init(entity, 30, MapEntityPane.originLocationType.MIDDLE);
         pane.startEntityHitDetect();
     }
 }

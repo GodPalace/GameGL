@@ -2,12 +2,16 @@ package com.godpalace.gamegl.entity;
 
 
 import java.awt.*;
+import java.util.ArrayList;
 
 public class MapEntityPane extends EntityPane {
     private Entity MainEntity;
     private int TureOriginPointX, TureOriginPointY;
     private int originPointX = 0, originPointY = 0;
+    private int borderX1, borderY1, borderX2, borderY2;
+    private boolean borderEnabled = false;
     private int range;
+    private final ArrayList<Entity> notMoveEntities = new ArrayList<>();
     private originLocationType originLoc;
     private final Thread originThread = new Thread(()->{
         while(true){
@@ -33,24 +37,76 @@ public class MapEntityPane extends EntityPane {
             int x = MainEntity.getEntityX() - TureOriginPointX;
             int y = MainEntity.getEntityY() - TureOriginPointY;
             if(Math.abs(x) > range && x < 0){
-                int dx = Math.abs(x) - range;
-                MainEntity.setEntityX(TureOriginPointX - range);
-                moveMap(dx, 0);
+                if (borderEnabled) {
+                    int borderX = borderX1 - originPointX + TureOriginPointX;
+                    if (borderX < 0) {
+                        int dx = Math.abs(x) - range;
+                        MainEntity.setEntityX(TureOriginPointX - range);
+                        moveMap(dx, 0);
+                    } else {
+                        Edge edge = this.getEntityHitEdge(MainEntity);
+                        if (edge == Edge.LEFT || edge == Edge.TOP_LEFT || edge == Edge.BOTTOM_LEFT)
+                            MainEntity.setEntityX(0);
+                    }
+                } else {
+                    int dx = Math.abs(x) - range;
+                    MainEntity.setEntityX(TureOriginPointX - range);
+                    moveMap(dx, 0);
+                }
             }
             if(Math.abs(x) > range && x > 0){
-                int dx = Math.abs(x) - range;
-                MainEntity.setEntityX(TureOriginPointX + range);
-                moveMap(-dx, 0);
+                if (borderEnabled) {
+                    int borderX = borderX2 - originPointX + TureOriginPointX;
+                    if (borderX > this.getWidth()) {
+                        int dx = Math.abs(x) - range;
+                        MainEntity.setEntityX(TureOriginPointX + range);
+                        moveMap(-dx, 0);
+                    } else {
+                        Edge edge = this.getEntityHitEdge(MainEntity);
+                        if (edge == Edge.RIGHT || edge == Edge.TOP_RIGHT || edge == Edge.BOTTOM_RIGHT)
+                            MainEntity.setEntityX(this.getWidth() - MainEntity.getEntityWidth());
+                    }
+                } else {
+                    int dx = Math.abs(x) - range;
+                    MainEntity.setEntityX(TureOriginPointX + range);
+                    moveMap(-dx, 0);
+                }
             }
             if(Math.abs(y) > range && y < 0){
-                int dy = Math.abs(y) - range;
-                MainEntity.setEntityY(TureOriginPointY - range);
-                moveMap(0, dy);
+                if (borderEnabled) {
+                    int borderY = borderY1 - originPointY + TureOriginPointY;
+                    if (borderY < 0) {
+                        int dy = Math.abs(y) - range;
+                        MainEntity.setEntityY(TureOriginPointY - range);
+                        moveMap(0, dy);
+                    } else {
+                        Edge edge = this.getEntityHitEdge(MainEntity);
+                        if (edge == Edge.TOP || edge == Edge.TOP_LEFT || edge == Edge.TOP_RIGHT)
+                            MainEntity.setEntityY(0);
+                    }
+                } else {
+                    int dy = Math.abs(y) - range;
+                    MainEntity.setEntityY(TureOriginPointY - range);
+                    moveMap(0, dy);
+                }
             }
             if(Math.abs(y) > range && y > 0){
-                int dy = Math.abs(y) - range;
-                MainEntity.setEntityY(TureOriginPointY + range);
-                moveMap(0, -dy);
+                if (borderEnabled) {
+                    int borderY = borderY2 - originPointY + TureOriginPointY;
+                    if (borderY > this.getHeight()) {
+                        int dy = Math.abs(y) - range;
+                        MainEntity.setEntityY(TureOriginPointY + range);
+                        moveMap(0, -dy);
+                    } else {
+                        Edge edge = this.getEntityHitEdge(MainEntity);
+                        if (edge == Edge.BOTTOM || edge == Edge.BOTTOM_LEFT || edge == Edge.BOTTOM_RIGHT)
+                            MainEntity.setEntityY(this.getHeight() - MainEntity.getEntityHeight());
+                    }
+                } else {
+                    int dy = Math.abs(y) - range;
+                    MainEntity.setEntityY(TureOriginPointY + range);
+                    moveMap(0, -dy);
+                }
             }
             try {
                 Thread.sleep(1);
@@ -67,12 +123,28 @@ public class MapEntityPane extends EntityPane {
         super();
     }
 
+    public void init(Entity MainEntity, int range, originLocationType loc){
+        this.MainEntity = MainEntity;
+        this.range = range;
+        this.originLoc = loc;
+        originThread.start();
+        try {
+            Thread.sleep(5);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        this.MainEntity.setEntityX(TureOriginPointX);
+        this.MainEntity.setEntityY(TureOriginPointY);
+        EntityThread.start();
+    }
+
     public void moveMap(int dx, int dy) {
         originPointX -= dx;
         originPointY -= dy;
         this.forEach(entity -> {
-            if(entity.getId() != MainEntity.getId())
+            if(entity.getId() != MainEntity.getId() && !notMoveEntities.contains(entity)) {
                 entity.moveEntity(dx, dy);
+            }
         });
         repaint();
     }
@@ -82,15 +154,17 @@ public class MapEntityPane extends EntityPane {
         super.printComponent(g);
     }
 
+    public void addNotMoveEntity(Entity entity){
+        notMoveEntities.add(entity);
+    }
+    public void removeNotMoveEntity(Entity entity){
+       notMoveEntities.remove(entity);
+    }
+    public ArrayList<Entity> getNotMoveEntities(){
+        return notMoveEntities;
+    }
     public void setMainEntity(Entity entity){
         MainEntity = entity;
-        System.out.println(TureOriginPointX + " " + TureOriginPointY);
-        MainEntity.setEntityX(TureOriginPointX);
-        MainEntity.setEntityY(TureOriginPointY);
-        if(EntityThread.isAlive()){
-            EntityThread.interrupt();
-        }
-        EntityThread.start();
     }
     public Entity getMainEntity(){
         return MainEntity;
@@ -103,10 +177,6 @@ public class MapEntityPane extends EntityPane {
     }
     public void setOriginLocationType(originLocationType loc){
         originLoc = loc;
-        if(originThread.isAlive()){
-            originThread.interrupt();
-        }
-        originThread.start();
     }
     public originLocationType getOriginLocationType(){
         return originLoc;
@@ -126,9 +196,27 @@ public class MapEntityPane extends EntityPane {
     public void setOriginLocation(int x, int y){
         TureOriginPointX = x;
         TureOriginPointY = y;
-        if(originThread.isAlive()){
-            originThread.interrupt();
+        if (EntityThread.isAlive()){
+            EntityThread.interrupt();
         }
+    }
+    public void setBorder(int x1, int y1, int x2, int y2){
+        borderX1 = x1;
+        borderY1 = y1;
+        borderX2 = x2;
+        borderY2 = y2;
+        borderEnabled = true;
+    }
+    public void setBorderEnabled(boolean enabled){
+        borderEnabled = enabled;
+    }
+    public void  setEntityX(Entity entity, int x){
+        int dx = x - originPointX;
+        entity.setEntityX(dx + TureOriginPointX);
+    }
+    public void  setEntityY(Entity entity, int y){
+        int dy = y - originPointY;
+        entity.setEntityY(dy + TureOriginPointY);
     }
     public int getEntityX(Entity entity){
         int dx = entity.getEntityX() - TureOriginPointX;

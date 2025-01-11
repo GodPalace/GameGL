@@ -132,7 +132,7 @@ public abstract class Entity implements Serializable {
         AtomicBoolean isHit = new AtomicBoolean(false);
 
         pane.forEach(entities -> {
-            if (this.getId() != entities.getId()) {
+            if (this.getId() != entities.getId() && entities.isShow()) {
                 EntityPane.ContactSurface contactSurface;
                 if (dx > 0) {
                     contactSurface = pane.getEntityHitContactSurface(entities, this, dx);
