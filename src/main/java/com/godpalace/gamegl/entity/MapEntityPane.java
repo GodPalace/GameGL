@@ -3,7 +3,7 @@ package com.godpalace.gamegl.entity;
 
 import java.awt.*;
 import java.util.ArrayList;
-///
+//
 public class MapEntityPane extends EntityPane {
     private Entity MainEntity;
     private int TureOriginPointX, TureOriginPointY;
