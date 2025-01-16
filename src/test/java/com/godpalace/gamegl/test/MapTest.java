@@ -161,7 +161,7 @@ public class MapTest {
         frame.setVisible(true);
         BufferedImage image2 = ImageIO.read(HitPhysicsEngineTest.class.getResource("/666.png"));
         pane.setBackground(image2);
-        pane.setBackgroundMove(false);
+        pane.setBackgroundMove(false);//
         pane.addEntity(entity);
         pane.addEntity(loc, 2);
         pane.addNotMoveEntity(loc);

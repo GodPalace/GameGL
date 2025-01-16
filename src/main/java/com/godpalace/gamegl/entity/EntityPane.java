@@ -322,7 +322,7 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
         }
         repaint();
     }
-
+//
     public void moveBackgroundY(int dy){
         if (backgroundImage == null) return;
         BufferedImage image1, image2;
