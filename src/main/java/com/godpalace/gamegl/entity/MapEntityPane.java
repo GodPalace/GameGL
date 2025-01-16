@@ -9,23 +9,26 @@ public class MapEntityPane extends EntityPane {
     private int TureOriginPointX, TureOriginPointY;
     private int originPointX = 0, originPointY = 0;
     private int borderX1, borderY1, borderX2, borderY2;
-    private boolean borderEnabled = false;
+    private boolean borderEnabled = false, backgroundMove = true;
     private int range;
     private final ArrayList<Entity> notMoveEntities = new ArrayList<>();
-    private originLocationType originLoc;
+    private originLocationType originLoc = new originLocationType() {
+        @Override
+        public int OriginLocationX(int width, int height) {
+            return width/2;
+        }
+
+        @Override
+        public int OriginLocationY(int width, int height) {
+            return height/2;
+        }
+    };
     private final Thread originThread = new Thread(()->{
         while(true){
-            if(originLoc == originLocationType.MIDDLE){
-                TureOriginPointX = this.getWidth()/2;
-                TureOriginPointY = this.getHeight()/2;
-            }
-            if(originLoc == originLocationType.BOTTOM_MIDDLE){
-                TureOriginPointX = this.getWidth()/2;
-                TureOriginPointY = this.getHeight();
-            }
-
+            TureOriginPointX = originLoc.OriginLocationX(this.getWidth(), this.getHeight());
+            TureOriginPointY = originLoc.OriginLocationY(this.getWidth(), this.getHeight());
             try {
-                Thread.sleep(100);
+                Thread.sleep(5);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
@@ -115,26 +118,26 @@ public class MapEntityPane extends EntityPane {
             }
         }
     });
-    public enum originLocationType {
-        MIDDLE, BOTTOM_MIDDLE, NONE
-    }
 
     public MapEntityPane(){
         super();
+        TureOriginPointX = this.getWidth()/2;
+        TureOriginPointY = this.getHeight()/2;
     }
 
-    public void init(Entity MainEntity, int range, originLocationType loc){
+    public MapEntityPane(Entity MainEntity, int range){
+        super();
+        TureOriginPointX = this.getWidth()/2;
+        TureOriginPointY = this.getHeight()/2;
+        init(MainEntity, range);
+    }
+
+    public void init(Entity MainEntity, int range){
         this.MainEntity = MainEntity;
         this.range = range;
-        this.originLoc = loc;
         originThread.start();
-        try {
-            Thread.sleep(5);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-        this.MainEntity.setEntityX(TureOriginPointX);
-        this.MainEntity.setEntityY(TureOriginPointY);
+        this.MainEntity.setEntityX(originLoc.OriginLocationX(this.getWidth(), this.getHeight()));
+        this.MainEntity.setEntityY(originLoc.OriginLocationY(this.getWidth(), this.getHeight()));
         EntityThread.start();
     }
 
@@ -146,6 +149,10 @@ public class MapEntityPane extends EntityPane {
                 entity.moveEntity(dx, dy);
             }
         });
+        if (getBackgroundImage() != null && backgroundMove){
+            moveBackgroundX(dx);
+            moveBackgroundY(dy);
+        }
         repaint();
     }
 
@@ -175,6 +182,12 @@ public class MapEntityPane extends EntityPane {
     public int getRange(){
         return range;
     }
+    public void setBackgroundMove(boolean move){
+        backgroundMove = move;
+    }
+    public boolean isBackgroundMove(){
+        return backgroundMove;
+    }
     public void setOriginLocationType(originLocationType loc){
         originLoc = loc;
     }
@@ -192,13 +205,6 @@ public class MapEntityPane extends EntityPane {
     }
     public int getTrueOriginPointY() {
         return TureOriginPointY;
-    }
-    public void setOriginLocation(int x, int y){
-        TureOriginPointX = x;
-        TureOriginPointY = y;
-        if (EntityThread.isAlive()){
-            EntityThread.interrupt();
-        }
     }
     public void setBorder(int x1, int y1, int x2, int y2){
         borderX1 = x1;
@@ -225,5 +231,10 @@ public class MapEntityPane extends EntityPane {
     public int getEntityY(Entity entity){
         int dy = entity.getEntityY() - TureOriginPointY;
         return originPointY + dy;
+    }
+
+    public abstract static class originLocationType{
+        public abstract int OriginLocationX(int width, int height);
+        public abstract int OriginLocationY(int width, int height);
     }
 }

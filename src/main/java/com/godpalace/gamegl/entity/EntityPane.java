@@ -11,6 +11,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.image.BufferedImage;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Random;
@@ -27,7 +28,7 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
     private final CopyOnWriteArraySet<Integer> isKeyPressed;
 
     private Color backgroundColor;
-    private Image backgroundImage = null;
+    private BufferedImage backgroundImage = null;
     private boolean backgroundImageRepeat = false;
 
     public EntityPane() {
@@ -270,6 +271,15 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
         this.forEach(entity -> entity.setHitBoxEnabled(false));
     }
 
+    public BufferedImage ImageResize(BufferedImage image, int width, int height) {
+        BufferedImage resizedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = resizedImage.createGraphics();
+        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g.drawImage(image, 0, 0, width, height, null);
+        g.dispose();
+        return resizedImage;
+    }
+
     @Override
     public void setBackground(Color bg) {
         this.backgroundColor = bg;
@@ -277,9 +287,65 @@ public class EntityPane extends JPanel implements KeyListener, MouseListener {
         repaint();
     }
 
-    public void setBackground(Image image) {
-        this.backgroundImage = image;
+    public void setBackground(BufferedImage image) {
+        this.backgroundImage = ImageResize(image, getWidth(), getHeight());
         backgroundImageRepeat = true;
+        repaint();
+    }
+
+    public BufferedImage getBackgroundImage(){
+        return backgroundImage;
+    }
+
+    public void moveBackgroundX(int dx){
+        if (backgroundImage == null) return;
+        BufferedImage image1, image2;
+        backgroundImage = ImageResize(backgroundImage, getWidth(), getHeight());
+        if (dx < 0){
+            dx = Math.abs(dx) % getWidth();
+            image1 = backgroundImage.getSubimage(0, 0, dx, backgroundImage.getHeight());
+            image2 = backgroundImage.getSubimage(dx, 0, backgroundImage.getWidth() - dx, backgroundImage.getHeight());
+            backgroundImage = new BufferedImage(backgroundImage.getWidth(), backgroundImage.getHeight(), BufferedImage.TYPE_INT_ARGB);
+            Graphics2D g = backgroundImage.createGraphics();
+            g.drawImage(image2, 0, 0, null);
+            g.drawImage(image1, getWidth() - dx, 0, null);
+            g.dispose();
+        } else if (dx > 0){
+            dx = Math.abs(dx) % getWidth();
+            image1 = backgroundImage.getSubimage(0, 0, backgroundImage.getWidth() - dx, backgroundImage.getHeight());
+            image2 = backgroundImage.getSubimage(backgroundImage.getWidth() - dx, 0, dx, backgroundImage.getHeight());
+            backgroundImage = new BufferedImage(backgroundImage.getWidth(), backgroundImage.getHeight(), BufferedImage.TYPE_INT_ARGB);
+            Graphics2D g = backgroundImage.createGraphics();
+            g.drawImage(image2, 0, 0, null);
+            g.drawImage(image1, dx, 0, null);
+            g.dispose();
+        }
+        repaint();
+    }
+
+    public void moveBackgroundY(int dy){
+        if (backgroundImage == null) return;
+        BufferedImage image1, image2;
+        backgroundImage = ImageResize(backgroundImage, getWidth(), getHeight());
+        if (dy < 0){
+            dy = Math.abs(dy) % getHeight();
+            image1 = backgroundImage.getSubimage(0, 0, backgroundImage.getWidth(), dy);
+            image2 = backgroundImage.getSubimage(0, dy, backgroundImage.getWidth(), backgroundImage.getHeight() - dy);
+            backgroundImage = new BufferedImage(backgroundImage.getWidth(), backgroundImage.getHeight(), BufferedImage.TYPE_INT_ARGB);
+            Graphics2D g = backgroundImage.createGraphics();
+            g.drawImage(image2, 0, 0, null);
+            g.drawImage(image1, 0, getHeight() - dy, null);
+            g.dispose();
+        } else if (dy > 0){
+            dy = Math.abs(dy) % getHeight();
+            image1 = backgroundImage.getSubimage(0, 0, backgroundImage.getWidth(), backgroundImage.getHeight() - dy);
+            image2 = backgroundImage.getSubimage(0, backgroundImage.getHeight() - dy, backgroundImage.getWidth(), dy);
+            backgroundImage = new BufferedImage(backgroundImage.getWidth(), backgroundImage.getHeight(), BufferedImage.TYPE_INT_ARGB);
+            Graphics2D g = backgroundImage.createGraphics();
+            g.drawImage(image2, 0, 0, null);
+            g.drawImage(image1, 0, dy, null);
+            g.dispose();
+        }
         repaint();
     }
 
