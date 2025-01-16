@@ -6,14 +6,12 @@ import com.godpalace.gamegl.entity.logic.EntityKeyboardLogicAdapter;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.util.Random;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class MapTest {
@@ -159,9 +157,9 @@ public class MapTest {
         });
 
         frame.setVisible(true);
-        BufferedImage image2 = ImageIO.read(HitPhysicsEngineTest.class.getResource("/666.png"));
+        BufferedImage image2 = ImageIO.read(HitPhysicsEngineTest.class.getResource("/6666.png"));
         pane.setBackground(image2);
-        pane.setBackgroundMove(false);//
+        pane.setBackgroundMove(false);///
         pane.addEntity(entity);
         pane.addEntity(loc, 2);
         pane.addNotMoveEntity(loc);
